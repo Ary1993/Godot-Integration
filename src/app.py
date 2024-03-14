@@ -9,7 +9,7 @@ from api.utils import APIException, generate_sitemap
 from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
-from api.models import db
+from api.models import db, Users, Comments, WishList, History_sells, Shopping_Cart, Products
 
 
 ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
@@ -55,6 +55,11 @@ def serve_any_other_file(path):
     response.cache_control.max_age = 0  # Avoid cache memory
     return response
 
+@app.route('/hello', methods=['GET'])
+def handle_hello():
+
+    response_body = {"message": "Hello, this is your GET /user response "}
+    return jsonify(response_body), 200
 
 # This only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
