@@ -19,54 +19,55 @@ class Users(db.Model):
         # Do not serialize the password, its a security breach
         return {'id': self.id,
                 'email': self.email,
+                'nick_name': self.nick_name,
                 'is_admin': self.is_active,
                 'is_active': self.is_active}
 
 
 class Products(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    product_name = db.Column(db.String(120), unique=True, nullable=False)
+    name = db.Column(db.String(120), unique=True, nullable=False)
     price = db.Column(db.Float, unique=False, nullable=False)
-    actual_discount = db.Column(db.Float, unique=False, nullable=False)
+    discount = db.Column(db.Float, unique=False, nullable=False)
     description = db.Column(db.String(120), unique=True, nullable=False)
     image_url = db.Column(db.String(120), unique=True, nullable=False)
 
     def __repr__(self):
-        return f"<Products: {self.id}"
+        return f"<Product: {self.id} - {self.name}"
     
     def serialize(self):
         # Do not serialize the password, its a security breach
         return {"id": self.id,
-                 "product_name": self.product_name,
-                 "price": self.price,
-                 "description": self.description,
-                 "image_url": self.image_url}
-
-
+                "name": self.name,
+                "price": self.price,
+                "discount": self.discount,
+                "description": self.description,
+                "image_url": self.image_url}
 
 
 class Comments(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     comment = db.Column(db.String(80), unique=False, nullable=False)
-    value = db.Column(db.String(120), unique=True, nullable=False)
+    #Verificar si hay un campo tipo range 1-5
+    value = db.Column(db.Integer, unique=False, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     users = db.relationship("Users", foreign_keys=[user_id])
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"))
     products = db.relationship("Products", foreign_keys=[product_id])
 
     def __repr__(self):
-        return f'<Comments: {self.id}>'
+        return f'<Comment: {self.id}>'
 
     def serialize(self):
         # Do not serialize the password, its a security breach
         return {"id": self.id,
-                 "user_id": self.user_id,
-                 "product_id": self.product_id,
-                 "comment": self.comment,
-                 "value": self.value}
+                "user_id": self.user_id,
+                "product_id": self.product_id,
+                "comment": self.comment,
+                "value": self.value}
 
 
-class WishList(db.Model):
+class Wishes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     users = db.relationship("Users", foreign_keys=[user_id])
@@ -74,16 +75,15 @@ class WishList(db.Model):
     products = db.relationship("Products", foreign_keys=[product_id])
 
     def __repr__(self):
-        return f'<WishList {self.id}>'
+        return f'<Wish {self.id}>'
 
     def serialize(self):
-        # Do not serialize the password, its a security breach
         return {"id": self.id,
-                 "user_id": self.user_id,
-                 "product_id": self.product_id}
+                "user_id": self.user_id,
+                "product_id": self.product_id}
 
 
-class History_sells(db.Model):
+class Sales(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     users = db.relationship("Users", foreign_keys=[user_id])
@@ -91,55 +91,51 @@ class History_sells(db.Model):
     products = db.relationship("Products", foreign_keys=[product_id])
     date_sold = db.Column(db.String(80), unique=False, nullable=False)
     total_price = db.Column(db.Integer, unique=False, nullable=False)
-    product_ammount = db.Column(db.Integer, unique=False, nullable=False)
+    quantity = db.Column(db.Integer, unique=False, nullable=False)
 
     def __repr__(self):
-        return f'<History_sells {self.id}>'
+        return f'<sale: {self.id}>'
 
     def serialize(self):
-        # Do not serialize the password, its a security breach
         return {"id": self.id,
-                 "user_id": self.user_id,
-                 "product_id": self.product_id,
-                 "date_sold": self.date_sold,
-                 "total_price": self.total_price,
-                 "product_ammount": self.product_ammount}
+                "user_id": self.user_id,
+                "product_id": self.product_id,
+                "date_sold": self.date_sold,
+                "total_price": self.total_price,
+                "quantity": self.quantity}
 
 
-class Shopping_Cart(db.Model):
+class ShoppingCarts(db.Model):
+    __tablename__ = "shopping_carts"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     users = db.relationship("Users", foreign_keys=[user_id])
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"))
     products = db.relationship("Products", foreign_keys=[product_id])
-    ammount = db.Column(db.Integer, unique=False, nullable=False)
+    quantity = db.Column(db.Integer, unique=False, nullable=False)
     price = db.Column(db.Integer, unique=False, nullable=False)
-    product_ammount = db.Column(db.Integer, unique=False, nullable=False)
-
+ 
     def __repr__(self):
-        return f'<Shopping_Cart {self.id}>'
+        return f'<Shopping_Cart: {self.id}>'
 
     def serialize(self):
-        # Do not serialize the password, its a security breach
         return {"id": self.id,
-                 "user_id": self.user_id,
-                 "product_id": self.product_id,
-                 "ammount": self.ammount,
-                 "price": self.price,
-                 "product_ammount": self.product_ammount}
+                "user_id": self.user_id,
+                "product_id": self.product_id,
+                "quantity": self.quantity,
+                "price": self.price}
 
 
-class Store(db.Model):
+class Stores(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"))
     products = db.relationship("Products", foreign_keys=[product_id])
     code_key = db.Column(db.String(80), unique=False, nullable=False)
 
     def __repr__(self):
-        return f'<Store {self.id}>'
+        return f'<Stores {self.id}>'
 
     def serialize(self):
-        # Do not serialize the password, its a security breach
         return {"id": self.id,
-                 "product_id": self.product_id,
-                 "code_key": self.code_key}
+                "product_id": self.product_id,
+                "code_key": self.code_key}

@@ -1,6 +1,6 @@
 import os
 from flask_admin import Admin
-from .models import db, Users, Comments, Products, WishList, History_sells, Shopping_Cart
+from .models import db, Users, Comments, Products, Wishes, Sales, ShoppingCarts
 from flask_admin.contrib.sqla import ModelView
 
 
@@ -12,6 +12,6 @@ def setup_admin(app):
     admin.add_view(ModelView(Users, db.session))  # You can duplicate that line to add mew models
     admin.add_view(ModelView(Comments, db.session))
     admin.add_view(ModelView(Products, db.session))
-    admin.add_view(ModelView(WishList, db.session))
-    admin.add_view(ModelView(History_sells, db.session))
-    admin.add_view(ModelView(Shopping_Cart, db.session))
+    admin.add_view(ModelView(Wishes, db.session))
+    admin.add_view(ModelView(Sales, db.session))
+    admin.add_view(ModelView(ShoppingCarts, db.session))
