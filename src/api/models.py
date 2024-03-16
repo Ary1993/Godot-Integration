@@ -89,7 +89,7 @@ class Sales(db.Model):
     users = db.relationship("Users", foreign_keys=[user_id])
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"))
     products = db.relationship("Products", foreign_keys=[product_id])
-    date_sold = db.Column(db.String(80), unique=False, nullable=False)
+    date_sold = db.Column(db.DateTime, nullable=False)
     total_price = db.Column(db.Integer, unique=False, nullable=False)
     quantity = db.Column(db.Integer, unique=False, nullable=False)
 
