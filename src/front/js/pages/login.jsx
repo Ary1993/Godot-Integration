@@ -6,32 +6,31 @@ export const Login = () => {
     const { store, actions } = useContext(Context)
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-        const handleOnClick = async () => {
-            const dataToSend = {
-                email: email,
-                password: password
-            }
-            const url = process.env.BACKEND_URL + "/api/login"
-            const options = {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(dataToSend)
-            }
-            const response = await fetch(url, options);
-            if (!response.ok) {
-                console.log("error", response.status, response.statusText);
-                return
-            }
-            const data = await response.json()
-            actions.login();
-            localStorage.setItem("token", data.access_token)
+    const handleOnClick = async () => {
+        const dataToSend = {
+            email: email,
+            password: password
         }
-    
-    return (
+        const url = process.env.BACKEND_URL + "/api/login"
+        const options = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(dataToSend)
+        }
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            console.log("error", response.status, response.statusText);
+            return
+        }
+        const data = await response.json()
+        actions.login();
+        localStorage.setItem("token", data.access_token)
+    }
 
-        store.isLogin ? <Navigate to="/dashboard" /> :
+    return (
+        store.isLogin ? <Navigate to="/profile" /> :
             <div className="card-body py-5 px-md-5">
                 <h1 className="text-center">Login</h1>
                 <div className="form-outline mb-4">
