@@ -14,7 +14,7 @@ export const Signup = () => {
             password: password,
             nick_name: nickname,
         }
-        const url = process.env.BACKEND_URL + "api/signup"
+        const url = process.env.BACKEND_URL + "/api/signup"
         const options = {
             method: "POST",
             headers: {
