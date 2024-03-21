@@ -4,7 +4,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 from flask import Flask, request, jsonify, url_for, Blueprint
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-from api.models import db, Users
+from api.models import db, Users, Products, Wishes
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
@@ -78,4 +78,73 @@ def signup():
     response_body["message"] = "Usuario registrado con exito"
     response_body["user"] = new_user.serialize()
     return jsonify(response_body), 201
+    
 
+@api.route('/products', methods=['GET','POST'])  # comenzamos con el endpoints
+def handle_products():  #definimos nuestro enpoints
+    response_body = results = {}
+    #  comprehension esta implementacion
+    if request.method == 'GET':
+        try:
+        # logica para consultar la base de dato y devolver todos los usuarios
+            products = db.session.execute(db.select(Products)).scalars()  # de donde va a sacar el resultado
+            response_body['results'] = [product.serialize() for product in products]  # el resultado que va a mostrar en forma de lista
+            response_body['message'] = 'Success'
+            return jsonify(response_body), 200  # lo que exactamente nos mostrara
+        except KeyError as e:
+            response_body['message'] = f'Some Error {str(e)}'
+            return jsonify(response_body), 400
+    if request.method == 'POST':
+        try:
+            data = request.json # se pasan los datos del usuario desde la solicitud
+            product = Products(name = data['name'], # los datos con los cual se crearan el usuario
+                     price = data['price'],
+                     discount = data['discount'],
+                     description = data ['description'],
+                     image_url = data ['image_url'])
+            db.session.add(product) # para añadir a la session
+            db.session.commit() # para confirmar el añadir al usuario
+            response_body['results'] = product.serialize()
+            response_body['message'] = 'product Created'
+            return jsonify(response_body), 201 # 201 (creado)
+        except KeyError as e:
+            response_body['message'] = f'Some Error {str(e)}'
+            return jsonify(response_body), 400
+
+
+@api.route('/wishes/<int:user_id>/products', methods=['GET', 'POST'])
+def add_to_wished(user_id):
+    response_body = {}
+    data = request.json
+    # toma una instancia del modelo: wishes
+    #wish = Wishes.query.filter_by(user_id=user_id, product_id=product_id).first()
+    if request.method == 'GET':
+        return response_body
+    if request.method == 'POST':
+        wish = Wishes(user_id = user_id, product_id = data["product_id"])
+        db.session.add(wish)
+        db.session.commit()
+        response_body["message"]= "Responde el POST"
+        return response_body
+       
+
+@api.route('/wishes/<int:user_id>/products/<int:product_id>', methods=['GET', 'DELETE'])
+def delete_wished(user_id, product_id):
+    #tengo que verificar con el token quien es el user que hace la peticion 
+    response_body = {}
+    data = request.json
+    # toma una instancia del modelo: wishes
+    #wish = Wishes(user_id = user_id, product_id = data["product_id"])
+    wish = Wishes.query.filter_by(user_id=user_id, product_id=product_id).first()
+    if wish:
+        if request.method == 'GET':
+            return response_body
+        if request.method == 'DELETE':
+            response_body["message"]= "Responde el Delete"
+            response_body["result"]= wish.serialize()
+            db.session.delete(wish)
+            db.session.commit()
+            return response_body
+    else:
+        response_body["message"] = "NONE"
+        return response_body, 400
