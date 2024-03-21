@@ -59,3 +59,23 @@ def handle_user_id(id):
     response_body["message"] = "Usuario encontrado con éxito."
     return response_body, 200  # Código de estado para "Éxito"
 
+@api.route("/signup", methods=["POST"])
+def signup():
+    response_body = {}
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+    nick_name = request.json.get("nick_name", None)
+    user_exists = db.session.execute(db.select(Users).where(Users.email == email)).scalar()
+    print(user_exists)
+    if user_exists:
+        response_body["message"] = "El email ya esta registrado"
+        return jsonify(response_body), 400
+    new_user = Users(email=email, password=password, is_active=True, nick_name=nick_name, is_admin=False)
+    db.session.add(new_user)
+    db.session.commit()
+    access_token = create_access_token(identity=new_user.serialize()) #preguntar al profe
+    response_body["access_token"] = access_token #preguntar al profe
+    response_body["message"] = "Usuario registrado con exito"
+    response_body["user"] = new_user.serialize()
+    return jsonify(response_body), 201
+

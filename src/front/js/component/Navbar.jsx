@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Context } from "../store/appContext";
 
 export const Navbar = () => {
-	const {store, actions} = useContext(Context)
+	const { store, actions } = useContext(Context)
 	return (
 		<nav className="navbar navbar-light bg-light">
 			<div className="container">
@@ -16,6 +16,13 @@ export const Navbar = () => {
 							{store.isLogin ? "Logout" : "Login"}
 						</button>
 					</Link>
+					{!store.isLogin && (
+						<Link to="/signup">
+							<button className="btn btn-warning ms-2">
+								Signup
+							</button>
+						</Link>
+					)}
 				</div>
 			</div>
 		</nav>
