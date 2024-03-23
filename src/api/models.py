@@ -116,10 +116,7 @@ class ShoppingCarts(db.Model):
 
     def serialize(self):
         return {"id": self.id,
-                "user_id": self.user_id,
-                "product_id": self.product_id,
-                "quantity": self.quantity,
-                "price": self.price}
+                "user_id": self.user_id}
 
 
 class ShoppingCartItems(db.Model):

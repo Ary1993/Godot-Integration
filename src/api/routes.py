@@ -4,7 +4,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 from flask import Flask, request, jsonify, url_for, Blueprint
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-from api.models import db, Users, Products, Wishes, ShoppingCarts, ShoppingCartItems
+from api.models import db, Users, Products, Wishes, ShoppingCarts, ShoppingCartItems, Comments
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
@@ -169,23 +169,22 @@ def add_to_cart():
         return response_body, 200
     if request.method == 'POST':
         if current_user["is_admin"]:
-            response_body ["message"] = "el administrador no puede comprar"
-            return response_body, 403
-        data = request.json
-        cart = ShoppingCarts(user_id = user_id, 
-                             product_id = data["product_id"], 
-                             quantity = data["quantity"], 
-                             price = data["price"])
+            response_body["message"] = "El administrador no puede comprar"
+        return response_body, 403
+    # Buscar si el usuario ya tiene un carrito
+    existing_cart = db.session.query(ShoppingCarts).filter_by(user_id=current_user['user_id']).first()
+
+    if existing_cart is None:
+        # Crear el carrito aquí si no existe
+        cart = ShoppingCarts(user_id=current_user['user_id'])
         db.session.add(cart)
         db.session.commit()
-        response_body["message"]= "Responde el POST"
-        return response_body
-"""
-@api.route('/carts/<int:user_id>/products', methods=['GET', 'POST'])
-def add_to_cart(user_id):
-    response_body = {}
-    if request.method == 'GET':
-        return response_body, 200"""
+        response_body["message"] = "Carrito creado exitosamente."
+        return response_body, 200
+    else:
+        response_body["message"] = "Ya tienes un carrito."
+        return response_body, 403
+
         
        
 
@@ -209,3 +208,24 @@ def delete_cart(user_id, product_id):
     else:
         response_body["message"] = "NONE"
         return response_body, 400
+
+@api.route('/products/<int:product_id>/comments', methods=['GET', 'POST'])
+def comment(product_id):
+    response_body = {}
+    if request.method == 'GET':
+        # el user ve los comentarios 
+        comments = db.session.execute(db.select(Comments).where(Comments.product_id == product_id)).scalars()        
+        response_body['results'] = [raw.serialize() for raw in comments]  # el resultado que va a mostrar en forma de lista
+        response_body['message'] = 'Success'
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json # se pasan los datos del usuario desde la solicitud
+        comment = Comments(product_id = product_id,
+                           user_id = data['user_id'],
+                           comment = data['comment'], # los datos con los cual se crearan el usuario
+                           value = data['value'])
+        db.session.add(comment) # para añadir a la session
+        db.session.commit() # para confirmar el añadir al usuario
+        response_body['results'] = comment.serialize()
+        response_body['message'] = 'Comment Created'
+        return jsonify(response_body), 201 # 201 (creado)
