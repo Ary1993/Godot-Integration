@@ -110,10 +110,6 @@ class ShoppingCarts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     users = db.relationship("Users", foreign_keys=[user_id])
-    product_id = db.Column(db.Integer, db.ForeignKey("products.id"))
-    products = db.relationship("Products", foreign_keys=[product_id])
-    quantity = db.Column(db.Integer, unique=False, nullable=False)
-    price = db.Column(db.Integer, unique=False, nullable=False)
  
     def __repr__(self):
         return f'<Shopping_Cart: {self.id}>'
@@ -121,6 +117,27 @@ class ShoppingCarts(db.Model):
     def serialize(self):
         return {"id": self.id,
                 "user_id": self.user_id,
+                "product_id": self.product_id,
+                "quantity": self.quantity,
+                "price": self.price}
+
+
+class ShoppingCartItems(db.Model):
+    __tablename__ = "shopping_cart_items"
+    id = db.Column(db.Integer, primary_key=True)
+    quantity = db.Column(db.Integer, unique=False, nullable=False)
+    price = db.Column(db.Integer, unique=False, nullable=False)
+    shopping_cart_id = db.Column(db.Integer, db.ForeignKey("shopping_carts.id"))
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"))
+    shopping_carts = db.relationship("ShoppingCarts", foreign_keys=[shopping_cart_id])
+    products = db.relationship("Products", foreign_keys=[product_id])
+ 
+    def __repr__(self):
+        return f'<shopping_cart: {self.shopping_cart_id}> - <Shopping_Cart_item: {self.id}>'
+
+    def serialize(self):
+        return {"id": self.id,
+                "shopping_cart_id": self.shopping_cart_id,
                 "product_id": self.product_id,
                 "quantity": self.quantity,
                 "price": self.price}
@@ -139,3 +156,5 @@ class Stores(db.Model):
         return {"id": self.id,
                 "product_id": self.product_id,
                 "code_key": self.code_key}
+
+

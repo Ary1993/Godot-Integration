@@ -4,7 +4,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 from flask import Flask, request, jsonify, url_for, Blueprint
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-from api.models import db, Users, Products, Wishes
+from api.models import db, Users, Products, Wishes, ShoppingCarts, ShoppingCartItems
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
@@ -143,6 +143,67 @@ def delete_wished(user_id, product_id):
             response_body["message"]= "Responde el Delete"
             response_body["result"]= wish.serialize()
             db.session.delete(wish)
+            db.session.commit()
+            return response_body
+    else:
+        response_body["message"] = "NONE"
+        return response_body, 400
+
+
+@api.route('/carts', methods=['GET', 'POST'])
+@jwt_required()
+def add_to_cart():
+    response_body = {}
+    current_user = get_jwt_identity()
+    print(current_user) 
+    if request.method == 'GET':
+        if current_user["is_admin"]:
+            # traer de la base todos los carritos (porque el admin puede ver todos los carritos)
+            pass
+        else:
+            # traer el carrito del user con sus items 
+            pass    
+        carts = db.session.execute(db.select(ShoppingCarts)).scalars()  # de donde va a sacar el resultado
+        response_body['results'] = [raw.serialize() for raw in carts]  # el resultado que va a mostrar en forma de lista
+        response_body['message'] = 'Success'
+        return response_body, 200
+    if request.method == 'POST':
+        if current_user["is_admin"]:
+            response_body ["message"] = "el administrador no puede comprar"
+            return response_body, 403
+        data = request.json
+        cart = ShoppingCarts(user_id = user_id, 
+                             product_id = data["product_id"], 
+                             quantity = data["quantity"], 
+                             price = data["price"])
+        db.session.add(cart)
+        db.session.commit()
+        response_body["message"]= "Responde el POST"
+        return response_body
+"""
+@api.route('/carts/<int:user_id>/products', methods=['GET', 'POST'])
+def add_to_cart(user_id):
+    response_body = {}
+    if request.method == 'GET':
+        return response_body, 200"""
+        
+       
+
+@api.route('/carts/<int:user_id>/products/<int:product_id>', methods=['GET', 'DELETE'])
+def delete_cart(user_id, product_id):
+    #tengo que verificar con el token quien es el user que hace la peticion 
+    response_body = {}
+    data = request.json
+    # toma una instancia del modelo: wishes
+    #wish = Wishes(user_id = user_id, product_id = data["product_id"])
+    cart = ShoppingCarts.query.filter_by(user_id=user_id, product_id=product_id).first()
+    if cart:
+        if request.method == 'GET':
+            return response_body
+        if request.method == 'DELETE':
+            response_body["message"]= "Responde el Delete"
+            response_body["result"]= cart.serialize()
+            db.session.delete(cart)
             db.session.commit()
             return response_body
     else:
