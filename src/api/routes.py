@@ -65,12 +65,17 @@ def signup():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
     nick_name = request.json.get("nick_name", None)
+    is_admin = request.json.get("is_admin", False)
     user_exists = db.session.execute(db.select(Users).where(Users.email == email)).scalar()
     print(user_exists)
     if user_exists:
         response_body["message"] = "El email ya esta registrado"
         return jsonify(response_body), 400
-    new_user = Users(email=email, password=password, is_active=True, nick_name=nick_name, is_admin=False)
+    new_user = Users(email=email,
+                     password=password,
+                     nick_name=nick_name,
+                     is_active=True,
+                     is_admin=is_admin)
     db.session.add(new_user)
     db.session.commit()
     access_token = create_access_token(identity=new_user.serialize()) #preguntar al profe
@@ -112,15 +117,31 @@ def handle_products():  #definimos nuestro enpoints
             return jsonify(response_body), 400
 
 
-@api.route('/wishes/<int:user_id>/products', methods=['GET', 'POST'])
-def add_to_wished(user_id):
+# TODO: hacer el endd point products/id para metodo get para ver los datos de un producto GET/PUT/DELETE
+
+@api.route('/wishes', methods=['GET', 'POST'])
+@jwt_required()
+def add_to_wished():
     response_body = {}
-    data = request.json
-    # toma una instancia del modelo: wishes
-    #wish = Wishes.query.filter_by(user_id=user_id, product_id=product_id).first()
+    current_user = get_jwt_identity()
     if request.method == 'GET':
+        if current_user["is_admin"]:
+            wishes = db.session.execute(db.select(Wishes)).scalars()  # de donde va a sacar el resultado
+            response_body['results'] = [row.serialize() for row in wishes]  # el resultado que va a mostrar en forma de lista
+            response_body['message'] = 'Success'
+            return response_body, 200
+        #hacer el user comun
+        #wishes = db.session.execute(db.select(Wishes, Users, Products)).where(Wishes.user_id==current_user["id"]).join(Users, Users.id==Wishes.users_id, isouter=True).all()
+        wishes = db.session.query(Wishes, Users, Products).\
+                            join(Users, Users.id==Wishes.user_id, isouter=True).\
+                            join(Products, Products.id==Wishes.product_id, isouter=True).\
+                            where(Wishes.user_id==current_user["id"]).all()
+        print (wishes)
+        response_body['results'] = [[row[0].serialize(), row[2].serialize()] for row in wishes]  # el resultado que va a mostrar en forma de lista
+        response_body['message'] = 'Success User'    
         return response_body
     if request.method == 'POST':
+        data = request.json
         wish = Wishes(user_id = user_id, product_id = data["product_id"])
         db.session.add(wish)
         db.session.commit()
@@ -128,8 +149,8 @@ def add_to_wished(user_id):
         return response_body
        
 
-@api.route('/wishes/<int:user_id>/products/<int:product_id>', methods=['GET', 'DELETE'])
-def delete_wished(user_id, product_id):
+@api.route('/wishes/<int:wishes_id>', methods=['DELETE'])
+def delete_wished(wishes_id):
     #tengo que verificar con el token quien es el user que hace la peticion 
     response_body = {}
     data = request.json
@@ -164,7 +185,7 @@ def add_to_cart():
             # traer el carrito del user con sus items 
             pass    
         carts = db.session.execute(db.select(ShoppingCarts)).scalars()  # de donde va a sacar el resultado
-        response_body['results'] = [raw.serialize() for raw in carts]  # el resultado que va a mostrar en forma de lista
+        response_body['results'] = [row.serialize() for row in carts]  # el resultado que va a mostrar en forma de lista
         response_body['message'] = 'Success'
         return response_body, 200
     if request.method == 'POST':
@@ -215,7 +236,7 @@ def comment(product_id):
     if request.method == 'GET':
         # el user ve los comentarios 
         comments = db.session.execute(db.select(Comments).where(Comments.product_id == product_id)).scalars()        
-        response_body['results'] = [raw.serialize() for raw in comments]  # el resultado que va a mostrar en forma de lista
+        response_body['results'] = [row.serialize() for row in comments]  # el resultado que va a mostrar en forma de lista
         response_body['message'] = 'Success'
         return response_body, 200
     if request.method == 'POST':
