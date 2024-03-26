@@ -1,18 +1,19 @@
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
-from flask import Flask, request, jsonify, url_for, Blueprint
+from flask import Flask, request, jsonify, url_for, Blueprint, redirect
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from api.models import db, Users, Products, Wishes, ShoppingCarts, ShoppingCartItems, Comments, Stores
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-
+import stripe
+import os
 
 api = Blueprint('api', __name__)
 CORS(api)  # Allow CORS requests to this API
-
+stripe.api_key = os.getenv("stripe.api_test")
 
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
@@ -48,7 +49,6 @@ def protected():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
-
 
 @api.route('/users/<int:id>', methods=['GET'])
 def handle_user_id(id):
@@ -173,11 +173,32 @@ def delete_wish(wish_id):
     return response_body, 200
 
 # hay que instalar stripe, importalo y usar la llave personalisada
-# stripe.api_key = 'sk_test_51Oydz8CRvrCTFzksk98iPpkrc6CnE0eVIb3vtL0cqZepRn3T7rR35SNFX8r1kkKuUWZXjCWdjTkgkK4ZNptacXKP00J9mNUI9G'
 
-#tenia una ruta para la Shopping cart pero no funciono 
+@api.route('/checkout', methods=['POST'])
+def checkout():
+    try:
+        # Extrae los datos necesarios del cuerpo de la solicitud
+        json_data = request.get_json(force=True)
+        email = json_data.get('email')
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        # Crea un nuevo intento de pago con Stripe
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            customer_email=email,
+            line_items=[{
+                'price': 'price_1Oye4sCRvrCTFzksDaV5jHfX',
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url='https://example.com/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='https://example.com/cancel',
+        )
+        # Retorna la URL de la sesión para redirigir al usuario
+        return jsonify({'checkout_url': checkout_session.url})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
-#abajo la ruta antigua para la Shoppingcarts 
 
 @api.route('/carts', methods=['GET', 'POST'])
 @jwt_required()
@@ -187,23 +208,25 @@ def add_to_cart():
     print(current_user) 
     if request.method == 'GET':
         if current_user["is_admin"]:
-            wishes = db.session.execute(db.select(ShoppingCarts)).scalars()  # de donde va a sacar el resultado
-            response_body['results'] = [row.serialize() for row in wishes]  # el resultado que va a mostrar en forma de lista
+            carts = db.session.execute(db.select(ShoppingCarts)).scalars()  # de donde va a sacar el resultado
+            response_body['results'] = [row.serialize() for row in carts]  # el resultado que va a mostrar en forma de lista
             response_body['message'] = 'Success'
             return response_body, 200
-        else:
-            # traer el carrito del user con sus items 
-            pass    
-        carts = db.session.execute(db.select(ShoppingCarts)).scalars()  # de donde va a sacar el resultado
-        response_body['results'] = [row.serialize() for row in carts]  # el resultado que va a mostrar en forma de lista
-        response_body['message'] = 'Success'
-        return response_body, 200
+        
+        print (carts)
+        response_body['results'] = [[row.serialize()] for row in carts]  # el resultado que va a mostrar en forma de lista
+        response_body['message'] = 'Success User'
     if request.method == 'POST':
         if current_user["is_admin"]:
             response_body["message"] = "El administrador no puede comprar"
         return response_body, 403
     # Buscar si el usuario ya tiene un carrito
-    existing_cart = db.session.query(ShoppingCarts).filter_by(user_id=current_user['user_id']).first()
+        data = request.json
+        wish = ShoppingCartItems(user_id = user_id, product_id = data["product_id"])
+        db.session.add(cart)
+        db.session.commit()
+        response_body["message"]= "Responde el POST"
+        return response_body, 200
 
     if existing_cart is None:
         # Crear el carrito aquí si no existe
@@ -219,7 +242,7 @@ def add_to_cart():
         
        
 
-@api.route('/carts/<int:user_id>/products/<int:product_id>', methods=['GET', 'DELETE'])
+@api.route('/carts/<int:product_id>', methods=['DELETE'])
 def delete_cart(user_id, product_id):
     #tengo que verificar con el token quien es el user que hace la peticion 
     response_body = {}
