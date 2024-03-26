@@ -172,36 +172,14 @@ def delete_wish(wish_id):
     response_body["message"] = "Wish deleted successfully"
     return response_body, 200
 
-"""@api.route('/wishes/<int:wishes_id>', methods=['DELETE'])
-def delete_wished(wishes_id):
-    #tengo que verificar con el token quien es el user que hace la peticion 
-    response_body = {}
-    data = request.json
-    # toma una instancia del modelo: wishes
-    #wish = Wishes(user_id = user_id, product_id = data["product_id"])
-    wish = Wishes.query.filter_by(user_id=user_id, product_id=product_id).first()
-    if wish:
-        if request.method == 'GET':
-            return response_body
-        if request.method == 'DELETE':
-            response_body["message"]= "Responde el Delete"
-            response_body["result"]= wish.serialize()
-            db.session.delete(wish)
-            db.session.commit()
-            return response_body
-    else:
-        response_body["message"] = "NONE"
-        return response_body, 400"""
-
-
 # hay que instalar stripe, importalo y usar la llave personalisada
-# stripe.api_key = 'tu_clave_secreta_de_stripe'
+# stripe.api_key = 'sk_test_51Oydz8CRvrCTFzksk98iPpkrc6CnE0eVIb3vtL0cqZepRn3T7rR35SNFX8r1kkKuUWZXjCWdjTkgkK4ZNptacXKP00J9mNUI9G'
 
 #tenia una ruta para la Shopping cart pero no funciono 
 
 #abajo la ruta antigua para la Shoppingcarts 
 
-"""@api.route('/carts', methods=['GET', 'POST'])
+@api.route('/carts', methods=['GET', 'POST'])
 @jwt_required()
 def add_to_cart():
     response_body = {}
@@ -260,7 +238,7 @@ def delete_cart(user_id, product_id):
             return response_body
     else:
         response_body["message"] = "NONE"
-        return response_body, 400"""
+        return response_body, 400
 
 @api.route('/products/<int:product_id>/comments', methods=['GET', 'POST'])
 def comment(product_id):
@@ -283,6 +261,8 @@ def comment(product_id):
         response_body['message'] = 'Comment Created'
         return jsonify(response_body), 201 # 201 (creado)
 
+
+# las ruta stores hay que preguntarle al profe si hay que hacer la store y como 
 
 @api.route('/store', methods=['GET', 'POST'])
 @jwt_required()
