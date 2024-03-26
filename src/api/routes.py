@@ -4,7 +4,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 from flask import Flask, request, jsonify, url_for, Blueprint
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-from api.models import db, Users, Products, Wishes, ShoppingCarts, ShoppingCartItems, Comments
+from api.models import db, Users, Products, Wishes, ShoppingCarts, ShoppingCartItems, Comments, Stores
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
@@ -147,9 +147,32 @@ def add_to_wished():
         db.session.commit()
         response_body["message"]= "Responde el POST"
         return response_body
-       
 
-@api.route('/wishes/<int:wishes_id>', methods=['DELETE'])
+@api.route('/wishes/<int:wish_id>', methods=['DELETE'])
+@jwt_required()
+def delete_wish(wish_id):
+    response_body = {}
+    current_user = get_jwt_identity()
+    
+    # Verificar si el usuario es un administrador
+    if current_user["is_admin"]:
+        return {"message": "Unauthorized"}, 401
+    
+    # Buscar el deseo a eliminar por su ID
+    wish = Wishes.query.get(Products_id)
+    
+    # Verificar si el deseo existe
+    if not wish:
+        return {"message": "Wish not found"}, 404
+    
+    # Eliminar el deseo
+    db.session.delete(wish)
+    db.session.commit()
+    
+    response_body["message"] = "Wish deleted successfully"
+    return response_body, 200
+
+"""@api.route('/wishes/<int:wishes_id>', methods=['DELETE'])
 def delete_wished(wishes_id):
     #tengo que verificar con el token quien es el user que hace la peticion 
     response_body = {}
@@ -168,10 +191,17 @@ def delete_wished(wishes_id):
             return response_body
     else:
         response_body["message"] = "NONE"
-        return response_body, 400
+        return response_body, 400"""
 
 
-@api.route('/carts', methods=['GET', 'POST'])
+# hay que instalar stripe, importalo y usar la llave personalisada
+# stripe.api_key = 'tu_clave_secreta_de_stripe'
+
+#tenia una ruta para la Shopping cart pero no funciono 
+
+#abajo la ruta antigua para la Shoppingcarts 
+
+"""@api.route('/carts', methods=['GET', 'POST'])
 @jwt_required()
 def add_to_cart():
     response_body = {}
@@ -179,8 +209,10 @@ def add_to_cart():
     print(current_user) 
     if request.method == 'GET':
         if current_user["is_admin"]:
-            # traer de la base todos los carritos (porque el admin puede ver todos los carritos)
-            pass
+            wishes = db.session.execute(db.select(ShoppingCarts)).scalars()  # de donde va a sacar el resultado
+            response_body['results'] = [row.serialize() for row in wishes]  # el resultado que va a mostrar en forma de lista
+            response_body['message'] = 'Success'
+            return response_body, 200
         else:
             # traer el carrito del user con sus items 
             pass    
@@ -228,7 +260,7 @@ def delete_cart(user_id, product_id):
             return response_body
     else:
         response_body["message"] = "NONE"
-        return response_body, 400
+        return response_body, 400"""
 
 @api.route('/products/<int:product_id>/comments', methods=['GET', 'POST'])
 def comment(product_id):
@@ -250,3 +282,58 @@ def comment(product_id):
         response_body['results'] = comment.serialize()
         response_body['message'] = 'Comment Created'
         return jsonify(response_body), 201 # 201 (creado)
+
+
+@api.route('/store', methods=['GET', 'POST'])
+@jwt_required()
+def store():
+    if request.method == 'GET':
+        # Aquí puedes implementar la lógica para obtener todos los productos disponibles en la tienda
+        # junto con su información adicional desde la tabla Stores
+        stores = Stores.query.all()
+        serialized_products = [store.serialize() for store in stores]
+        return jsonify({"stores": serialized_products}), 200
+
+    elif request.method == 'POST':
+        # Verificar si el usuario es un administrador
+        current_user = get_jwt_identity()
+        if not current_user["is_admin"]:
+            return jsonify({"message": "Unauthorized"}), 401
+
+        # Aquí puedes implementar la lógica para agregar un nuevo producto a la tienda
+        data = request.json
+        product_id = data.get('product_id')
+        code_key = data.get('code_key')
+
+        # Verificar si el producto existe
+        product = Products.query.get(product_id)
+        if not product:
+            return jsonify({"message": "El producto no existe"}), 404
+
+        # Crear un nuevo registro en la tabla Stores
+        new_store = Stores(product_id=product_id, code_key=code_key)
+
+        # Guardar el nuevo registro en la base de datos
+        db.session.add(new_store)
+        db.session.commit()
+
+        return jsonify({"message": "Producto agregado exitosamente a la tienda"}), 201
+
+@api.route('/store/<int:store_id>', methods=['DELETE'])
+def delete_product_from_store(store_id):
+    # Verificar si el usuario es un administrador
+    current_user = get_jwt_identity()
+    if not current_user["is_admin"]:
+        return jsonify({"message": "Unauthorized"}), 401
+
+    # Buscar el registro de la tienda por su ID
+    store = Stores.query.get(store_id)
+
+    if not store:
+        return jsonify({"message": "El producto no está en la tienda"}), 404
+
+    # Eliminar el producto de la tienda
+    db.session.delete(store)
+    db.session.commit()
+
+    return jsonify({"message": "Producto eliminado exitosamente de la tienda"}), 200
