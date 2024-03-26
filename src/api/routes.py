@@ -159,7 +159,7 @@ def delete_wish(wish_id):
         return {"message": "Unauthorized"}, 401
     
     # Buscar el deseo a eliminar por su ID
-    wish = Wishes.query.get(Products_id)
+    wish = Wishes.query.get(wish_id)
     
     # Verificar si el deseo existe
     if not wish:
