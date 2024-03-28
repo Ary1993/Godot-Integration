@@ -1,18 +1,19 @@
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
-from flask import Flask, request, jsonify, url_for, Blueprint
+from flask import Flask, request, jsonify, url_for, Blueprint, redirect
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-from api.models import db, Users, Products, Wishes
+from api.models import db, Users, Products, Wishes, ShoppingCarts, ShoppingCartItems, Comments, Stores
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-
+import stripe
+import os
 
 api = Blueprint('api', __name__)
 CORS(api)  # Allow CORS requests to this API
-
+stripe.api_key = os.getenv("stripe.api_test")
 
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
@@ -49,7 +50,6 @@ def protected():
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
 
-
 @api.route('/users/<int:id>', methods=['GET'])
 def handle_user_id(id):
     response_body = {} 
@@ -65,12 +65,17 @@ def signup():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
     nick_name = request.json.get("nick_name", None)
+    is_admin = request.json.get("is_admin", False)
     user_exists = db.session.execute(db.select(Users).where(Users.email == email)).scalar()
     print(user_exists)
     if user_exists:
         response_body["message"] = "El email ya esta registrado"
         return jsonify(response_body), 400
-    new_user = Users(email=email, password=password, is_active=True, nick_name=nick_name, is_admin=False)
+    new_user = Users(email=email,
+                     password=password,
+                     nick_name=nick_name,
+                     is_active=True,
+                     is_admin=is_admin)
     db.session.add(new_user)
     db.session.commit()
     access_token = create_access_token(identity=new_user.serialize()) #preguntar al profe
@@ -112,39 +117,356 @@ def handle_products():  #definimos nuestro enpoints
             return jsonify(response_body), 400
 
 
-@api.route('/wishes/<int:user_id>/products', methods=['GET', 'POST'])
-def add_to_wished(user_id):
+# TODO: hacer el endd point products/id para metodo get para ver los datos de un producto GET/PUT/DELETE
+
+@api.route('/wishes', methods=['GET', 'POST'])
+@jwt_required()
+def add_to_wished():
     response_body = {}
-    data = request.json
-    # toma una instancia del modelo: wishes
-    #wish = Wishes.query.filter_by(user_id=user_id, product_id=product_id).first()
+    current_user = get_jwt_identity()
     if request.method == 'GET':
+        if current_user["is_admin"]:
+            wishes = db.session.execute(db.select(Wishes)).scalars()  # de donde va a sacar el resultado
+            response_body['results'] = [row.serialize() for row in wishes]  # el resultado que va a mostrar en forma de lista
+            response_body['message'] = 'Success'
+            return response_body, 200
+        #hacer el user comun
+        #wishes = db.session.execute(db.select(Wishes, Users, Products)).where(Wishes.user_id==current_user["id"]).join(Users, Users.id==Wishes.users_id, isouter=True).all()
+        wishes = db.session.query(Wishes, Users, Products).\
+                            join(Users, Users.id==Wishes.user_id, isouter=True).\
+                            join(Products, Products.id==Wishes.product_id, isouter=True).\
+                            where(Wishes.user_id==current_user["id"]).all()
+        print (wishes)
+        response_body['results'] = [[row[0].serialize(), row[2].serialize()] for row in wishes]  # el resultado que va a mostrar en forma de lista
+        response_body['message'] = 'Success User'    
         return response_body
     if request.method == 'POST':
+        data = request.json
         wish = Wishes(user_id = user_id, product_id = data["product_id"])
         db.session.add(wish)
         db.session.commit()
         response_body["message"]= "Responde el POST"
         return response_body
-       
 
-@api.route('/wishes/<int:user_id>/products/<int:product_id>', methods=['GET', 'DELETE'])
-def delete_wished(user_id, product_id):
+@api.route('/wishes/<int:wish_id>', methods=['DELETE'])
+@jwt_required()
+def delete_wish(wish_id):
+    response_body = {}
+    current_user = get_jwt_identity()
+    
+    # Verificar si el usuario es un administrador
+    if current_user["is_admin"]:
+        return {"message": "Unauthorized"}, 401
+    
+    # Buscar el deseo a eliminar por su ID
+    wish = Wishes.query.get(wish_id)
+    
+    # Verificar si el deseo existe
+    if not wish:
+        return {"message": "Wish not found"}, 404
+    
+    # Eliminar el deseo
+    db.session.delete(wish)
+    db.session.commit()
+    
+    response_body["message"] = "Wish deleted successfully"
+    return response_body, 200
+
+# hay que instalar stripe, importalo y usar la llave personalisada
+
+@api.route('/checkout', methods=['POST'])
+def checkout():
+    try:
+        # Extrae los datos necesarios del cuerpo de la solicitud
+        json_data = request.get_json(force=True)
+        email = json_data.get('email')
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        # Crea un nuevo intento de pago con Stripe
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            customer_email=email,
+            line_items=[{
+                'price': 'price_1Oye4sCRvrCTFzksDaV5jHfX',
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url='https://example.com/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='https://example.com/cancel',
+        )
+        # Retorna la URL de la sesión para redirigir al usuario
+        return jsonify({'checkout_url': checkout_session.url})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+
+# Ruta para manejar la creación de un nuevo carrito de compras
+@api.route('/cart', methods=['POST'])
+#@jwt_required()  # Requiere autenticación JWT
+def add_cart():
+    #current_user_id = get_jwt_identity()
+    data = request.json
+    user_id = data.get('user_id')
+
+    #if current_user_id != user_id:
+     #   return jsonify({'message': 'No tienes permiso para realizar esta acción'}), 403
+
+    if user_id is None:
+        return jsonify({'message': 'Se requiere el ID de usuario para crear un carrito'}), 400
+
+    # Crear un nuevo carrito de compras
+    add_cart = ShoppingCarts(user_id=user_id)
+    db.session.add(add_cart)
+    db.session.commit()
+
+    return jsonify({'message': 'Carrito creado exitosamente', 'cart_id': add_cart.id}), 201
+
+# Ruta para obtener un carrito de compras por su ID
+@api.route('/cart/<int:cart_id>', methods=['GET'])
+@jwt_required()  # Requiere autenticación JWT
+def get_cart(cart_id):
+    cart = ShoppingCarts.query.get(cart_id)
+    if cart is None:
+        return jsonify({'message': 'Carrito no encontrado'}), 404
+
+    # Obtener los ítems del carrito
+    items = ShoppingCartItems.query.filter_by(shopping_cart_id=cart_id).all()
+    serialized_items = [item.serialize() for item in items]
+
+    # Serializar el carrito junto con los ítems
+    cart_data = cart.serialize()
+    cart_data['items'] = serialized_items
+
+    return jsonify(cart_data)
+    
+"""# Ruta para obtener un carrito de compras por su ID
+@api.route('/cart/<int:cart_id>', methods=['GET'])
+@jwt_required()  # Requiere autenticación JWT
+def get_cart(cart_id):
+    cart = ShoppingCarts.query.get(cart_id)
+    if cart is None:
+        return jsonify({'message': 'Carrito no encontrado'}), 404
+
+    return jsonify(cart.serialize())"""
+
+
+# Ruta para borrar un carrito de compras por su ID
+@api.route('/cart/<int:cart_id>', methods=['DELETE'])
+@jwt_required()  # Requiere autenticación JWT
+def borrar_carrito(cart_id):
+    cart = ShoppingCarts.query.get(cart_id)
+    if cart is None:
+        return jsonify({'message': 'Carrito no encontrado'}), 404
+
+    db.session.delete(cart)
+    db.session.commit()
+
+    return jsonify({'message': 'Carrito eliminado exitosamente'}), 200
+
+
+# Ruta para agregar un producto a un carrito de compras
+@api.route('/cart/<int:cart_id>/product', methods=['POST'])
+#@jwt_required()  # Requiere autenticación JWT
+def agregar_producto(cart_id):
+    #current_user_id = get_jwt_identity()
+    cart = ShoppingCarts.query.get(cart_id)
+
+    if cart is None:
+        return jsonify({'message': 'Carrito no encontrado'}), 404
+
+    #if cart.user_id != current_user_id:
+     #   return jsonify({'message': 'No tienes permiso para realizar esta acción'}), 403
+
+    data = request.json
+    product_id = data.get('product_id')
+    quantity = data.get('quantity')
+    price = data.get('price')
+
+    if not all([product_id, quantity, price]):
+        return jsonify({'message': 'Se requieren los campos product_id, quantity y price'}), 400
+
+    # Crear un nuevo item en el carrito
+    new_item = ShoppingCartItems(
+        quantity=quantity,
+        price=price,
+        shopping_cart_id=cart_id,
+        product_id=product_id
+    )
+    db.session.add(new_item)
+    db.session.commit()
+
+    return jsonify({'message': 'Producto agregado exitosamente al carrito', 'item_id': new_item.id}), 201
+
+# Ruta para borrar los ítems del carrito
+@api.route('/cart/<int:cart_id>/product', methods=['DELETE'])
+@jwt_required()  # Requiere autenticación JWT
+def borrar_items_carrito(cart_id):
+    current_user_id = get_jwt_identity()
+    cart = ShoppingCarts.query.get(cart_id)
+    if cart is None:
+        return jsonify({'message': 'Carrito no encontrado'}), 404
+
+    # Borrar todos los ítems del carrito
+    ShoppingCartItems.query.filter_by(shopping_cart_id=cart_id).delete()
+    db.session.commit()
+    
+    return jsonify({'message': 'Todos los ítems del carrito han sido eliminados exitosamente'}), 200
+
+# Ruta para borrar un ítem específico del carrito
+@api.route('/cart/<int:cart_id>/product/<int:item_id>', methods=['DELETE'])
+@jwt_required()  # Requiere autenticación JWT
+def borrar_item_carrito(cart_id, item_id):
+    current_user_id = get_jwt_identity()
+    cart = ShoppingCarts.query.get(cart_id)
+    if cart is None:
+        return jsonify({'message': 'Carrito no encontrado'}), 404
+
+    # Buscar el ítem en el carrito
+    item = ShoppingCartItems.query.filter_by(id=item_id, shopping_cart_id=cart_id).first()
+    if item is None:
+        return jsonify({'message': 'Ítem no encontrado en el carrito'}), 404
+
+    # Borrar el ítem del carrito
+    db.session.delete(item)
+    db.session.commit()
+    
+    return jsonify({'message': 'Ítem del carrito eliminado exitosamente'}), 200
+
+
+"""@api.route('/carts', methods=['GET', 'POST'])
+@jwt_required()
+def add_to_cart():
+    response_body = {}
+    current_user = get_jwt_identity()
+    print(current_user) 
+    if request.method == 'GET':
+        if current_user["is_admin"]:
+            carts = db.session.execute(db.select(ShoppingCarts)).scalars()  # de donde va a sacar el resultado
+            response_body['results'] = [row.serialize() for row in carts]  # el resultado que va a mostrar en forma de lista
+            response_body['message'] = 'Success'
+            return response_body, 200
+        
+        print (carts)
+        response_body['results'] = [[row.serialize()] for row in carts]  # el resultado que va a mostrar en forma de lista
+        response_body['message'] = 'Success User'
+    if request.method == 'POST':
+        if current_user["is_admin"]:
+            response_body["message"] = "El administrador no puede comprar"
+        return response_body, 403
+    # Buscar si el usuario ya tiene un carrito
+        data = request.json
+        wish = ShoppingCartItems(user_id = user_id, product_id = data["product_id"])
+        db.session.add(cart)
+        db.session.commit()
+        response_body["message"]= "Responde el POST"
+        return response_body, 200
+
+    if existing_cart is None:
+        # Crear el carrito aquí si no existe
+        cart = ShoppingCarts(user_id=current_user['user_id'])
+        db.session.add(cart)
+        db.session.commit()
+        response_body["message"] = "Carrito creado exitosamente."
+        return response_body, 200
+    else:
+        response_body["message"] = "Ya tienes un carrito."
+        return response_body, 403  
+
+@api.route('/carts/<int:product_id>', methods=['DELETE'])
+def delete_cart(user_id, product_id):
     #tengo que verificar con el token quien es el user que hace la peticion 
     response_body = {}
     data = request.json
     # toma una instancia del modelo: wishes
     #wish = Wishes(user_id = user_id, product_id = data["product_id"])
-    wish = Wishes.query.filter_by(user_id=user_id, product_id=product_id).first()
-    if wish:
+    cart = ShoppingCarts.query.filter_by(user_id=user_id, product_id=product_id).first()
+    if cart:
         if request.method == 'GET':
             return response_body
         if request.method == 'DELETE':
             response_body["message"]= "Responde el Delete"
-            response_body["result"]= wish.serialize()
-            db.session.delete(wish)
+            response_body["result"]= cart.serialize()
+            db.session.delete(cart)
             db.session.commit()
             return response_body
     else:
         response_body["message"] = "NONE"
-        return response_body, 400
+        return response_body, 400"""
+
+@api.route('/products/<int:product_id>/comments', methods=['GET', 'POST'])
+def comment(product_id):
+    response_body = {}
+    if request.method == 'GET':
+        # el user ve los comentarios 
+        comments = db.session.execute(db.select(Comments).where(Comments.product_id == product_id)).scalars()        
+        response_body['results'] = [row.serialize() for row in comments]  # el resultado que va a mostrar en forma de lista
+        response_body['message'] = 'Success'
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json # se pasan los datos del usuario desde la solicitud
+        comment = Comments(product_id = product_id,
+                           user_id = data['user_id'],
+                           comment = data['comment'], # los datos con los cual se crearan el usuario
+                           value = data['value'])
+        db.session.add(comment) # para añadir a la session
+        db.session.commit() # para confirmar el añadir al usuario
+        response_body['results'] = comment.serialize()
+        response_body['message'] = 'Comment Created'
+        return jsonify(response_body), 201 # 201 (creado)
+
+
+# las ruta stores hay que preguntarle al profe si hay que hacer la store y como 
+
+@api.route('/store', methods=['GET', 'POST'])
+@jwt_required()
+def store():
+    if request.method == 'GET':
+        # Aquí puedes implementar la lógica para obtener todos los productos disponibles en la tienda
+        # junto con su información adicional desde la tabla Stores
+        stores = Stores.query.all()
+        serialized_products = [store.serialize() for store in stores]
+        return jsonify({"stores": serialized_products}), 200
+
+    elif request.method == 'POST':
+        # Verificar si el usuario es un administrador
+        current_user = get_jwt_identity()
+        if not current_user["is_admin"]:
+            return jsonify({"message": "Unauthorized"}), 401
+
+        # Aquí puedes implementar la lógica para agregar un nuevo producto a la tienda
+        data = request.json
+        product_id = data.get('product_id')
+        code_key = data.get('code_key')
+
+        # Verificar si el producto existe
+        product = Products.query.get(product_id)
+        if not product:
+            return jsonify({"message": "El producto no existe"}), 404
+
+        # Crear un nuevo registro en la tabla Stores
+        new_store = Stores(product_id=product_id, code_key=code_key)
+
+        # Guardar el nuevo registro en la base de datos
+        db.session.add(new_store)
+        db.session.commit()
+
+        return jsonify({"message": "Producto agregado exitosamente a la tienda"}), 201
+
+@api.route('/store/<int:store_id>', methods=['DELETE'])
+def delete_product_from_store(store_id):
+    # Verificar si el usuario es un administrador
+    current_user = get_jwt_identity()
+    if not current_user["is_admin"]:
+        return jsonify({"message": "Unauthorized"}), 401
+
+    # Buscar el registro de la tienda por su ID
+    store = Stores.query.get(store_id)
+
+    if not store:
+        return jsonify({"message": "El producto no está en la tienda"}), 404
+
+    # Eliminar el producto de la tienda
+    db.session.delete(store)
+    db.session.commit()
+
+    return jsonify({"message": "Producto eliminado exitosamente de la tienda"}), 200
