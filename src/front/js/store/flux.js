@@ -18,6 +18,9 @@ const getState = ({ getStore, getActions, setStore }) => {
 				setStore({isLogin: false});
 				localStorage.removeItem("token")
 			},
+      cart: (data) =>{
+        setStore({carts:data.items})
+      },
       // Use getActions to call a function within a fuction
       exampleFunction: () => { getActions().changeColor(0, "green"); },
       getMessage: async () => {
