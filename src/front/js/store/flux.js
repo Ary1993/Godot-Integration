@@ -4,11 +4,15 @@ const getState = ({ getStore, getActions, setStore }) => {
       message: null,
       demo: [{title: "FIRST", background: "white", initial: "white"},
              {title: "SECOND", background: "white", initial: "white"}],
-      isLogin: false
+      isLogin: false,
+      user: null,
+      carts: null
     },
     actions: {
-      login: () => {
+      login: (data) => {
 				setStore({isLogin:true});
+        setStore({user:data.results})
+        setStore({message:data.message})
 			},
 			logout: () =>{
 				setStore({isLogin: false});
