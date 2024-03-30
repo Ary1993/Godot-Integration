@@ -25,7 +25,7 @@ export const Login = () => {
             return
         }
         const data = await response.json()
-        actions.login();
+        actions.login(data);
         localStorage.setItem("token", data.access_token)
     }
 

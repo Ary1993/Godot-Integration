@@ -177,27 +177,88 @@ def delete_wish(wish_id):
 @api.route('/checkout', methods=['POST'])
 def checkout():
     try:
-        # Extrae los datos necesarios del cuerpo de la solicitud
         json_data = request.get_json(force=True)
         email = json_data.get('email')
-        if not email:
-            return jsonify({'error': 'Email is required'}), 400
-        # Crea un nuevo intento de pago con Stripe
+        product_ids = json_data.get('product_ids', [])
+
+        if not email or not product_ids:
+            return jsonify({'error': 'Email and product IDs are required'}), 400
+
+        # Busca los Stripe price IDs en tu base de datos para cada producto ID recibido
+        line_items = []
+        for prod_id in product_ids:
+            product = Products.query.filter_by(id=prod_id, is_active=True).first()
+            if product:
+                line_items.append({
+                    'price': product.stripe_key,
+                    'quantity': 1,
+                })
+
+        if not line_items:
+            return jsonify({'error': 'No valid products found'}), 400
+
+        # Crea una nueva sesión de checkout con Stripe
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             customer_email=email,
-            line_items=[{
-                'price': 'price_1Oye4sCRvrCTFzksDaV5jHfX',
-                'quantity': 1,
-            }],
+            line_items=line_items,
             mode='payment',
             success_url='https://example.com/success?session_id={CHECKOUT_SESSION_ID}',
             cancel_url='https://example.com/cancel',
         )
+
         # Retorna la URL de la sesión para redirigir al usuario
         return jsonify({'checkout_url': checkout_session.url})
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+    
+# @api.route('/checkout', methods=['GET'])   # revisar mas adelante si sobra tiempo para automatizar todo  a la hora de la creacion de producto se vincule con la api stripe
+# def get_checkout():
+#     try:
+#         # Extrae el email del parámetro de consulta de la solicitud
+#         email = request.args.get('email')
+#         if not email:
+#             return jsonify({'error': 'Email is required'}), 400
+
+#         # Obtén los detalles del precio para extraer el ID del producto y el precio
+#         price_id = 'price_1Oye4sCRvrCTFzksDaV5jHfX'
+#         price = stripe.Price.retrieve(price_id)
+#         product_id = price.product
+
+#         # El precio en la moneda correcta (dividido por 100 para convertir a euros)
+#         amount = float(price.unit_amount_decimal) / 100
+#         currency = price.currency  # La moneda del precio
+
+#         # Ahora, obtén los detalles del producto utilizando el product_id
+#         product = stripe.Product.retrieve(product_id)
+#         product_name = product.name  # Este es el nombre del producto
+#         product_description = product.description  # Descripción del producto
+#         # La URL de la imagen del producto; asumiendo que usas el primer elemento de images
+#         product_image_url = product.images[0] if product.images else None
+
+#         # Crea un nuevo intento de pago con Stripe
+#         checkout_session = stripe.checkout.Session.create(
+#             payment_method_types=['card'],
+#             customer_email=email,
+#             line_items=[{
+#                 'price': price_id,
+#                 'quantity': 1,
+#             }],
+#             mode='payment',
+#             success_url='https://example.com/success?session_id={CHECKOUT_SESSION_ID}',
+#             cancel_url='https://example.com/cancel',
+#         )
+
+#         # Retorna la URL de la sesión para redirigir al usuario, incluyendo el nombre, precio, descripción, y URL de la imagen del producto
+#         return jsonify({
+#             'checkout_url': checkout_session.url,
+#             'product_name': product_name,
+#             'price': f"{amount:.2f} {currency.upper()}",  # Formatea el precio para mostrarlo correctamente
+#             'description': product_description,
+#             'image_url': product_image_url
+#         })
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 400
 
 
 # Ruta para manejar la creación de un nuevo carrito de compras

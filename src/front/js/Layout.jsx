@@ -27,6 +27,7 @@ const Layout = () => {
             <BrowserRouter basename={basename}>
                 <ScrollToTop>
                     <Navbar />
+                    {/* <ALERT /> alert que muestre cuando message tiene algo con el flux de message */}
                     <Routes>
                         <Route element={<Home />} path="/" />
                         <Route element={<Login />} path="/login" />
