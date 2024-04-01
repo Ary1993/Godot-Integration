@@ -37,6 +37,8 @@ def login():
     access_token = create_access_token(identity=user.serialize())  # Lo que el back quiere agregar en el token
     response_body['access_token'] = access_token
     response_body['message'] = "Usuario logeado con éxito"
+    # agregar en el result el carrito del user y sus items
+    # agregar en el result los wishes del user
     response_body['results'] = user.serialize()
     return response_body, 200
 
@@ -262,7 +264,7 @@ def checkout():
 
 
 # Ruta para manejar la creación de un nuevo carrito de compras
-@api.route('/cart', methods=['POST'])
+"""@api.route('/carts', methods=['POST'])
 #@jwt_required()  # Requiere autenticación JWT
 def add_cart():
     #current_user_id = get_jwt_identity()
@@ -280,101 +282,79 @@ def add_cart():
     db.session.add(add_cart)
     db.session.commit()
 
-    return jsonify({'message': 'Carrito creado exitosamente', 'cart_id': add_cart.id}), 201
+    return jsonify({'message': 'Carrito creado exitosamente', 'cart_id': add_cart.id}), 201"""
 
 # Ruta para obtener un carrito de compras por su ID
-@api.route('/cart/<int:cart_id>', methods=['GET'])
+@api.route('/carts/<int:cart_id>', methods=['GET','DELETE'])
 @jwt_required()  # Requiere autenticación JWT
-def get_cart(cart_id):
+def hundle_cart(cart_id):
+    current_user = get_jwt_identity()
     cart = ShoppingCarts.query.get(cart_id)
     if cart is None:
         return jsonify({'message': 'Carrito no encontrado'}), 404
+    if  current_user["id"] != cart.user_id:
+        return jsonify({'message': 'no autorizado'}), 404
+    if request.method == 'GET': 
+        # Obtener los ítems del carrito
+        items = ShoppingCartItems.query.filter_by(shopping_cart_id=cart_id).all()
+        serialized_items = [item.serialize() for item in items]
+        # Serializar el carrito junto con los ítems
+        cart_data = cart.serialize()
+        cart_data['items'] = serialized_items
+        return jsonify(cart_data), 200
+    if request.method == 'DELETE': 
+        # Borrar todos los ítems del carrito
+        ShoppingCartItems.query.filter_by(shopping_cart_id=cart_id).delete()
+        db.session.delete(cart)
+        db.session.commit()
+        return jsonify({'message': 'Todos los ítems del carrito han sido eliminados exitosamente'}), 200
 
-    # Obtener los ítems del carrito
-    items = ShoppingCartItems.query.filter_by(shopping_cart_id=cart_id).all()
-    serialized_items = [item.serialize() for item in items]
 
-    # Serializar el carrito junto con los ítems
-    cart_data = cart.serialize()
-    cart_data['items'] = serialized_items
-
-    return jsonify(cart_data)
-    
-"""# Ruta para obtener un carrito de compras por su ID
-@api.route('/cart/<int:cart_id>', methods=['GET'])
+# Ruta para obtener un carrito de compras por su ID
+@api.route('/carts', methods=['GET'])
 @jwt_required()  # Requiere autenticación JWT
-def get_cart(cart_id):
-    cart = ShoppingCarts.query.get(cart_id)
+def get_cart():
+    current_user = get_jwt_identity()
+    user_id = current_user["id"]
+    #cart = ShoppingCarts.filter(user_id == current_user["id"])
+    cart = db.session.execute(db.select(ShoppingCarts).where(ShoppingCarts.user_id == user_id)).scalar()
     if cart is None:
-        return jsonify({'message': 'Carrito no encontrado'}), 404
-
-    return jsonify(cart.serialize())"""
-
-
-# Ruta para borrar un carrito de compras por su ID
-@api.route('/cart/<int:cart_id>', methods=['DELETE'])
-@jwt_required()  # Requiere autenticación JWT
-def borrar_carrito(cart_id):
-    cart = ShoppingCarts.query.get(cart_id)
-    if cart is None:
-        return jsonify({'message': 'Carrito no encontrado'}), 404
-
-    db.session.delete(cart)
-    db.session.commit()
-
-    return jsonify({'message': 'Carrito eliminado exitosamente'}), 200
-
+        #haacer el serialize de todos los items 
 
 # Ruta para agregar un producto a un carrito de compras
-@api.route('/cart/<int:cart_id>/product', methods=['POST'])
-#@jwt_required()  # Requiere autenticación JWT
-def agregar_producto(cart_id):
-    #current_user_id = get_jwt_identity()
-    cart = ShoppingCarts.query.get(cart_id)
-
+@api.route('/cart-items', methods=['POST'])
+@jwt_required()  # Requiere autenticación JWT
+def agregar_producto():
+    current_user = get_jwt_identity()
+    user_id = current_user["id"]
+    #cart = ShoppingCarts.filter(user_id == current_user["id"])
+    cart = db.session.execute(db.select(ShoppingCarts).where(ShoppingCarts.user_id == user_id)).scalar()
     if cart is None:
-        return jsonify({'message': 'Carrito no encontrado'}), 404
-
+        cart = ShoppingCarts(user_id=user_id)
+        db.session.add(cart)
+        db.session.commit()
     #if cart.user_id != current_user_id:
      #   return jsonify({'message': 'No tienes permiso para realizar esta acción'}), 403
-
     data = request.json
     product_id = data.get('product_id')
     quantity = data.get('quantity')
-    price = data.get('price')
-
-    if not all([product_id, quantity, price]):
-        return jsonify({'message': 'Se requieren los campos product_id, quantity y price'}), 400
-
+    product = db.session.execute(db.select(Products).where(Products.id == product_id)).scalar()
+    if not all([product_id, quantity]):
+        return jsonify({'message': 'Se requieren los campos product_id y quantity'}), 400
+    if product is None:
+        return jsonify({'message': 'el producto no existe'}), 400
+    price = product.price
     # Crear un nuevo item en el carrito
-    new_item = ShoppingCartItems(
-        quantity=quantity,
-        price=price,
-        shopping_cart_id=cart_id,
-        product_id=product_id
-    )
+    new_item = ShoppingCartItems(quantity=quantity,
+                                 price=price,
+                                 shopping_cart_id=cart.id,
+                                 product_id=product_id)
     db.session.add(new_item)
     db.session.commit()
-
     return jsonify({'message': 'Producto agregado exitosamente al carrito', 'item_id': new_item.id}), 201
 
-# Ruta para borrar los ítems del carrito
-@api.route('/cart/<int:cart_id>/product', methods=['DELETE'])
-@jwt_required()  # Requiere autenticación JWT
-def borrar_items_carrito(cart_id):
-    current_user_id = get_jwt_identity()
-    cart = ShoppingCarts.query.get(cart_id)
-    if cart is None:
-        return jsonify({'message': 'Carrito no encontrado'}), 404
-
-    # Borrar todos los ítems del carrito
-    ShoppingCartItems.query.filter_by(shopping_cart_id=cart_id).delete()
-    db.session.commit()
-    
-    return jsonify({'message': 'Todos los ítems del carrito han sido eliminados exitosamente'}), 200
-
 # Ruta para borrar un ítem específico del carrito
-@api.route('/cart/<int:cart_id>/product/<int:item_id>', methods=['DELETE'])
+@api.route('/cart-items/<int:item_id>', methods=['DELETE'])
 @jwt_required()  # Requiere autenticación JWT
 def borrar_item_carrito(cart_id, item_id):
     current_user_id = get_jwt_identity()
