@@ -6,18 +6,25 @@ const getState = ({ getStore, getActions, setStore }) => {
              {title: "SECOND", background: "white", initial: "white"}],
       isLogin: false,
       user: null,
-      carts: null
+      carts: null,
+      wishes: null
     },
     actions: {
       login: (data) => {
-				setStore({isLogin:true});
+        setStore({isLogin:true});
         setStore({user:data.results})
+        localStorage.setItem("user",JSON.stringify(data.results))
         setStore({message:data.message})
-			},
-			logout: () =>{
-				setStore({isLogin: false});
-				localStorage.removeItem("token")
-			},
+        // grabar estos datos en el local storage
+      },
+      logout: () =>{
+        setStore({isLogin: false});
+        localStorage.removeItem("token")
+      },
+      verifyLogin: () => {
+      // aqui se verifica si alguien esta logeado
+      // si el tokern existe en el local storage, quiere decir que esta logeado   
+      },
       cart: (data) =>{
         setStore({carts:data.items})
       },

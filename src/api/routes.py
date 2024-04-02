@@ -319,6 +319,7 @@ def get_cart():
     #cart = ShoppingCarts.filter(user_id == current_user["id"])
     cart = db.session.execute(db.select(ShoppingCarts).where(ShoppingCarts.user_id == user_id)).scalar()
     if cart is None:
+        pass
         #haacer el serialize de todos los items 
 
 # Ruta para agregar un producto a un carrito de compras
