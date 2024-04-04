@@ -16,6 +16,8 @@ import { Profile } from "./pages/profile.jsx";
 import { ShoppingCart } from "./pages/ShoppingCart.jsx";
 import { Wishes } from "./pages/Wishes.jsx";
 
+import "bootswatch/dist/lux/bootstrap.min.css";
+
 
 // Create your first component
 const Layout = () => {
