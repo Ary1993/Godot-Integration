@@ -6,20 +6,42 @@ const getState = ({ getStore, getActions, setStore }) => {
              {title: "SECOND", background: "white", initial: "white"}],
       isLogin: false,
       user: null,
-      carts: null
+      carts: null,
+      wishes: null,
     },
     actions: {
       login: (data) => {
-				setStore({isLogin:true});
+        setStore({isLogin:true});
         setStore({user:data.results})
+        setStore({wishes:data.results})
+        setStore({carts:data.results})
+        localStorage.setItem("user",JSON.stringify(data.results))
+        localStorage.setItem("wishes",JSON.stringify(data.results))
+        localStorage.setItem("carts",JSON.stringify(data.results))
         setStore({message:data.message})
-			},
-			logout: () =>{
-				setStore({isLogin: false});
-				localStorage.removeItem("token")
-			},
+        // grabar estos datos en el local storage
+      },
+      logout: () =>{
+        setStore({isLogin: false});
+        localStorage.removeItem("token")
+      },
+      verifyLogin: () => {
+      // aqui se verifica si alguien esta logeado
+      // si el tokern existe en el local storage, quiere decir que esta logeado   
+      if (localStorage.getItem("token")){
+        setStore({isLogin:true})
+        setStore({user:JSON.parse(localStorage.getItem("user"))})
+        setStore({wishes:JSON.parse(localStorage.getItem("wishes"))})
+        setStore({cart:JSON.parse(localStorage.getItem("cart"))})
+        //localStorage.setItem()
+      }
+      },
       cart: (data) =>{
         setStore({carts:data.items})
+      },
+      wishes: (data) =>{
+        localStorage.setItem("wishes",JSON.stringify(data.results))
+        
       },
       // Use getActions to call a function within a fuction
       exampleFunction: () => { getActions().changeColor(0, "green"); },

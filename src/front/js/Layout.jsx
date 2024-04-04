@@ -14,6 +14,7 @@ import { Login } from "./pages/login.jsx";
 import { Signup } from "./pages/Signup.jsx";
 import { Profile } from "./pages/profile.jsx";
 import { ShoppingCart } from "./pages/ShoppingCart.jsx";
+import { Wishes } from "./pages/Wishes.jsx";
 
 
 // Create your first component
@@ -33,6 +34,7 @@ const Layout = () => {
                         <Route element={<Home />} path="/" />
                         <Route element={<Login />} path="/login" />
                         <Route element={<Profile />} path="/profile" />
+                        <Route element={<Wishes />} path="/wishes" />
                         <Route element={<ShoppingCart />} path="/cart" />
                         <Route element={<Demo />} path="/demo" />
                         <Route element={<Single />} path="/single/:theid" />
