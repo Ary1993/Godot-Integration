@@ -17,6 +17,7 @@ import { ShoppingCart } from "./pages/ShoppingCart.jsx";
 import { Wishes } from "./pages/Wishes.jsx";
 
 import "bootswatch/dist/lux/bootstrap.min.css";
+import { Products } from "./pages/Products.jsx";
 
 
 // Create your first component
@@ -43,6 +44,7 @@ const Layout = () => {
                         <Route element={<Signup />} path="/signup" />
                         <Route element={<h1>Not found!</h1>} />
                     </Routes>
+                    
                     <Footer />
                 </ScrollToTop>
             </BrowserRouter>

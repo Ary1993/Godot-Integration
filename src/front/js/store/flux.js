@@ -8,6 +8,7 @@ const getState = ({ getStore, getActions, setStore }) => {
       user: null,
       carts: null,
       wishes: null,
+      products:null
     },
     actions: {
       login: (data) => {
@@ -35,6 +36,23 @@ const getState = ({ getStore, getActions, setStore }) => {
         setStore({cart:JSON.parse(localStorage.getItem("cart"))})
         //localStorage.setItem()
       }
+      },
+      getProducts: async () => {
+        // aqui se obtiene los productos 
+        const url = process.env.BACKEND_URL + "/api/products"
+				const options = {
+					method: "GET"
+				};
+				const response = await fetch(url,options)
+				if(!response.ok){
+
+					console.log("Error en el fetch",response.status,response.statusText)
+					return response.status
+				}
+				const data = await response.json()
+				console.log(data)
+				setStore({products:data.results})
+				//localStorage.setItem("products", JSON.stringify(data))
       },
       cart: (data) =>{
         setStore({carts:data.items})

@@ -21,6 +21,16 @@ export const Navbar = () => {
 							Wishes
 						</button>
 					</Link>
+					<Link to={"/products"}>
+						<button className="btn btn-success">
+							Products
+						</button>
+					</Link>
+					<Link to={"/wishes"}>
+						<button className="btn btn-success">
+							Products
+						</button>
+					</Link>
 					{!store.isLogin && (
 						<Link to="/signup">
 							<button className="btn btn-warning ms-2">
