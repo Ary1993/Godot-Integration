@@ -2,7 +2,8 @@ import React, { useContext } from "react";
 import { Context } from "../store/appContext.js";
 import rigoImageUrl from "../../img/rigo-baby.jpg";
 import "../../styles/home.css";
-import { Products } from "./Products.jsx";
+import { ProductsList } from "./ProductsList.jsx";
+
 
 export const Home = () => {
   const { store, actions } = useContext(Context);
@@ -16,7 +17,7 @@ export const Home = () => {
       <div className="alert alert-info">
         {store.message || "Loading message from the backend (make sure your python backend is running)..."}
       </div>
-      <Products/>
+      <ProductsList />
       <p>
         This boilerplate comes with lots of documentation:{" "}
         <a href="https://start.4geeksacademy.com/starters/react-flask">
