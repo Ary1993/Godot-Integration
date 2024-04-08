@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { Context } from "../store/appContext";
+import { BTNWishes } from "./BTNWishes.jsx";
 
 export const Navbar = () => {
 	const { store, actions } = useContext(Context)
@@ -12,25 +13,11 @@ export const Navbar = () => {
 				</Link>
 				<div className="ml-auto">
 					<Link to={store.isLogin ? "/" : "/login"}>
-						<button className="btn btn-success" onClick={actions.logout}>
+						<button className="btn btn-success ms-2" onClick={actions.logout}>
 							{store.isLogin ? "Logout" : "Login"}
 						</button>
 					</Link>
-					<Link to={"/wishes"}>
-						<button className="btn btn-success">
-							Wishes
-						</button>
-					</Link>
-					<Link to={"/products"}>
-						<button className="btn btn-success">
-							Products
-						</button>
-					</Link>
-					<Link to={"/wishes"}>
-						<button className="btn btn-success">
-							Products
-						</button>
-					</Link>
+					<BTNWishes/>
 					{!store.isLogin && (
 						<Link to="/signup">
 							<button className="btn btn-warning ms-2">
@@ -39,6 +26,7 @@ export const Navbar = () => {
 						</Link>
 					)}
 				</div>
+				
 			</div>
 		</nav>
 	);

@@ -14,10 +14,12 @@ import { Login } from "./pages/login.jsx";
 import { Signup } from "./pages/Signup.jsx";
 import { Profile } from "./pages/profile.jsx";
 import { ShoppingCart } from "./pages/ShoppingCart.jsx";
-import { Wishes } from "./pages/Wishes.jsx";
+import { WishList } from "./pages/WishList.jsx";
 
 import "bootswatch/dist/lux/bootstrap.min.css";
-import { Products } from "./pages/Products.jsx";
+import { ProductDetails } from "./pages/ProductDetails.jsx";
+
+
 
 
 // Create your first component
@@ -35,9 +37,10 @@ const Layout = () => {
                     {/* <ALERT /> alert que muestre cuando message tiene algo con el flux de message */}
                     <Routes>
                         <Route element={<Home />} path="/" />
+                        <Route element={<ProductDetails />} path="/product/:idProduct" />
                         <Route element={<Login />} path="/login" />
                         <Route element={<Profile />} path="/profile" />
-                        <Route element={<Wishes />} path="/wishes" />
+                        <Route element={<WishList />} path="/wishes" />
                         <Route element={<ShoppingCart />} path="/cart" />
                         <Route element={<Demo />} path="/demo" />
                         <Route element={<Single />} path="/single/:theid" />

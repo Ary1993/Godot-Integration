@@ -2,65 +2,92 @@ const getState = ({ getStore, getActions, setStore }) => {
   return {
     store: {
       message: null,
-      demo: [{title: "FIRST", background: "white", initial: "white"},
-             {title: "SECOND", background: "white", initial: "white"}],
+      demo: [{ title: "FIRST", background: "white", initial: "white" },
+      { title: "SECOND", background: "white", initial: "white" }],
       isLogin: false,
       user: null,
       carts: null,
-      wishes: null,
-      products:null
+      products: null,
+      wishes: []
     },
     actions: {
       login: (data) => {
-        setStore({isLogin:true});
-        setStore({user:data.results})
-        setStore({wishes:data.results})
-        setStore({carts:data.results})
-        localStorage.setItem("user",JSON.stringify(data.results))
-        localStorage.setItem("wishes",JSON.stringify(data.results))
-        localStorage.setItem("carts",JSON.stringify(data.results))
-        setStore({message:data.message})
+        console.log(data);
+        setStore({ isLogin: true });
+        setStore({ user: data.results })
+        //setStore({ wishes: data.results })
+        setStore({ carts: data.results })
+        localStorage.setItem("user", JSON.stringify(data.results))
+        localStorage.setItem("wishes", JSON.stringify(data.results))
+        localStorage.setItem("carts", JSON.stringify(data.results))
+        setStore({ message: data.message })
         // grabar estos datos en el local storage
       },
-      logout: () =>{
-        setStore({isLogin: false});
+      logout: () => {
+        setStore({ isLogin: false });
         localStorage.removeItem("token")
       },
+      addWishes: (newFavorite) => {
+        const isUserLoggedIn = getStore().isLogin;
+        //filtro update store
+        setStore({wishes: [...getStore().wishes, newFavorite]});
+        localStorage.setItem("wishes", JSON.stringify(getStore().wishes));
+        if (isUserLoggedIn) {
+          // User is logged in,update db post de wishes 
+          
+        } 
+      },
+      //25.3 41.11 , 44.44
+      removeWishes: (item, array) => {
+        setStore({ wishes: array.filter((element) => element != item) })
+      },
       verifyLogin: () => {
-      // aqui se verifica si alguien esta logeado
-      // si el tokern existe en el local storage, quiere decir que esta logeado   
-      if (localStorage.getItem("token")){
-        setStore({isLogin:true})
-        setStore({user:JSON.parse(localStorage.getItem("user"))})
-        setStore({wishes:JSON.parse(localStorage.getItem("wishes"))})
-        setStore({cart:JSON.parse(localStorage.getItem("cart"))})
-        //localStorage.setItem()
-      }
+        // aqui se verifica si alguien esta logeado
+        // si el tokern existe en el local storage, quiere decir que esta logeado   
+        if (localStorage.getItem("token")) {
+          setStore({ isLogin: true })
+          setStore({ user: JSON.parse(localStorage.getItem("user")) })
+          setStore({ wishes: JSON.parse(localStorage.getItem("wishes")) })
+          setStore({ cart: JSON.parse(localStorage.getItem("cart")) })
+          //localStorage.setItem()
+        }
       },
       getProducts: async () => {
         // aqui se obtiene los productos 
         const url = process.env.BACKEND_URL + "/api/products"
-				const options = {
-					method: "GET"
-				};
-				const response = await fetch(url,options)
-				if(!response.ok){
+        const options = {
+          method: "GET"
+        };
+        const response = await fetch(url, options)
+        if (!response.ok) {
 
-					console.log("Error en el fetch",response.status,response.statusText)
-					return response.status
-				}
-				const data = await response.json()
-				console.log(data)
-				setStore({products:data.results})
-				//localStorage.setItem("products", JSON.stringify(data))
+          console.log("Error en el fetch", response.status, response.statusText)
+          return response.status
+        }
+        const data = await response.json()
+        console.log(data)
+        setStore({ products: data.results })
+        //localStorage.setItem("products", JSON.stringify(data))
       },
-      cart: (data) =>{
-        setStore({carts:data.items})
+
+      getWishes: async () => {
+        // aqui se obtiene los productos 
+        const url = process.env.BACKEND_URL + "/api/whishes"
+        const options = {
+          method: "GET"
+        };
+        const response = await fetch(url, options)
+        if (!response.ok) {
+
+          console.log("Error en el fetch", response.status, response.statusText)
+          return response.status
+        }
+        const data = await response.json()
+        console.log(data)
+        setStore({ wishes: data.results })
+        //localStorage.setItem("products", JSON.stringify(data))
       },
-      wishes: (data) =>{
-        localStorage.setItem("wishes",JSON.stringify(data.results))
-        
-      },
+
       // Use getActions to call a function within a fuction
       exampleFunction: () => { getActions().changeColor(0, "green"); },
       getMessage: async () => {
