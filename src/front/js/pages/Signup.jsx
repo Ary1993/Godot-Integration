@@ -29,8 +29,10 @@ export const Signup = () => {
         }
         const data = await response.json()
         alert("Usuario Registrado Con Exito");
-        actions.login();
+        actions.login(data);
         localStorage.setItem("token", data.access_token)
+        // Now update wishes
+        await actions.updateWishes();
     }
     return (
         store.isLogin ? <Navigate to="/profile" /> :

@@ -13,7 +13,7 @@ export const Navbar = () => {
 				</Link>
 				<div className="ml-auto">
 					<Link to={store.isLogin ? "/" : "/login"}>
-						<button className="btn btn-success ms-2" onClick={actions.logout}>
+						<button className="btn btn-success ms-2" onClick={store.isLogin ? actions.logout : () => {}  }>
 							{store.isLogin ? "Logout" : "Login"}
 						</button>
 					</Link>
