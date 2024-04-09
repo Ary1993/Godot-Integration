@@ -3,6 +3,8 @@ import { Context } from "../store/appContext.js";
 import rigoImageUrl from "../../img/rigo-baby.jpg";
 import "../../styles/home.css";
 import { ProductsList } from "./ProductsList.jsx";
+import { Slider } from "./Slider.jsx";
+
 
 
 export const Home = () => {
@@ -17,6 +19,7 @@ export const Home = () => {
       <div className="alert alert-info">
         {store.message || "Loading message from the backend (make sure your python backend is running)..."}
       </div>
+      <Slider />
       <ProductsList />
       <p>
         This boilerplate comes with lots of documentation:{" "}
