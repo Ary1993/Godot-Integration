@@ -30,6 +30,8 @@ const injectContext = (PassedComponent) => {
          store, instead use actions, like this:
       */
       state.actions.getMessage();  // Calling this function from the flux.js actions
+      state.actions.verifyLogin(); // se ejecutara cada vez que levantemos la aplicacion
+      state.actions.getProducts();//obtener los productos de la base de datos 
     }, []);
 
     // The initial value for the context is not null anymore, but the current state of this component,
