@@ -27,6 +27,8 @@ export const Login = () => {
         const data = await response.json()
         actions.login(data);
         localStorage.setItem("token", data.access_token)
+        // Now update wishes
+        await actions.updateWishes();
     }
 
     return (

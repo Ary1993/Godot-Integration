@@ -182,6 +182,7 @@ def add_to_wished():
         return response_body
     if request.method == 'POST':
         data = request.json
+        user_id = current_user["id"]
         wish = Wishes(user_id = user_id, product_id = data["product_id"])
         db.session.add(wish)
         db.session.commit()
