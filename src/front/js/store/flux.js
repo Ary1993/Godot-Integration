@@ -18,7 +18,7 @@ const getState = ({ getStore, getActions, setStore }) => {
         localStorage.setItem("user", JSON.stringify(data.results))
       },
       logout: () => {
-        setStore({ 
+        setStore({
           isLogin: false,
           wishes: [], // Reset wishes in the state
           user: null, // Consider also resetting the user info if needed
@@ -39,26 +39,26 @@ const getState = ({ getStore, getActions, setStore }) => {
 
         // Assuming the logic to update wishes goes here...
         for (const wish of storedWishes) {
-            // Example: update each wish in the backend
-            const dataToSend= {
-              product_id: wish.id
-            };
-            const response = await fetch(`${process.env.BACKEND_URL}/api/wishes`, {
-              method: 'POST', // Or 'PUT', depending on your backend setup
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("token")}`,
-              },
-              body: JSON.stringify(dataToSend),
-            });
+          // Example: update each wish in the backend
+          const dataToSend = {
+            product_id: wish.id
+          };
+          const response = await fetch(`${process.env.BACKEND_URL}/api/wishes`, {
+            method: 'POST', // Or 'PUT', depending on your backend setup
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify(dataToSend),
+          });
 
-            if (!response.ok) {
-              console.log("error",response.status,response.statusText)
-            }
+          if (!response.ok) {
+            console.log("error", response.status, response.statusText)
+          }
 
-            // Optionally, process response data
-            const data = await response.json();
-            console.log('Wish updated:', data);
+          // Optionally, process response data
+          const data = await response.json();
+          console.log('Wish updated:', data);
 
         }
 
@@ -81,24 +81,24 @@ const getState = ({ getStore, getActions, setStore }) => {
             product_id: newFavorite.id
           };
           const url = process.env.BACKEND_URL + "/api/wishes";
-          
-            const response = await fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("token")}`
-              },
-              body: JSON.stringify(wishData)
-            });
 
-            if (!response.ok) {
-              console.log("error",response.status,response.statusText)
-            };
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${localStorage.getItem("token")}`
+            },
+            body: JSON.stringify(wishData)
+          });
 
-            const data = await response.json();
-            console.log("Wish added", data);
-           
-          
+          if (!response.ok) {
+            console.log("error", response.status, response.statusText)
+          };
+
+          const data = await response.json();
+          console.log("Wish added", data);
+
+
         }
       },
       //25.3 41.11 , 44.44
@@ -114,10 +114,10 @@ const getState = ({ getStore, getActions, setStore }) => {
           setStore({ cart: JSON.parse(localStorage.getItem("cart")) })
           //localStorage.setItem()
         }
-        else{
-          if(localStorage.getItem("wishes")){
+        else {
+          if (localStorage.getItem("wishes")) {
             setStore({ wishes: JSON.parse(localStorage.getItem("wishes")) })
-          } else{
+          } else {
             setStore({ wishes: [] })
           }
         }

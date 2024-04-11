@@ -4,6 +4,7 @@ import rigoImageUrl from "../../img/rigo-baby.jpg";
 import "../../styles/home.css";
 import { ProductsList } from "./ProductsList.jsx";
 import { Slider } from "./Slider.jsx";
+import { Newsletter } from "../component/Newsletter.jsx";
 
 
 
@@ -27,6 +28,7 @@ export const Home = () => {
           Read documentation
         </a>
       </p>
+      <Newsletter />
     </div>
   );
 };

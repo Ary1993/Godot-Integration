@@ -28,7 +28,6 @@ class Products(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
     price = db.Column(db.Float, unique=False, nullable=False)
-    discount = db.Column(db.Float, unique=False, nullable=False)
     description = db.Column(db.String(120), unique=True, nullable=False)
     image_url = db.Column(db.String(1000), unique=True, nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
@@ -42,7 +41,6 @@ class Products(db.Model):
         return {"id": self.id,
                 "name": self.name,
                 "price": self.price,
-                "discount": self.discount,
                 "description": self.description,
                 "image_url": self.image_url,
                 "stripe_key": self.stripe_key,
