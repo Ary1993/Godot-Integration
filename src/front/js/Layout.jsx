@@ -15,11 +15,10 @@ import { Signup } from "./pages/Signup.jsx";
 import { Profile } from "./pages/profile.jsx";
 import { ShoppingCart } from "./pages/ShoppingCart.jsx";
 import { WishList } from "./pages/WishList.jsx";
-
 import "bootswatch/dist/lux/bootstrap.min.css";
 import { ProductDetails } from "./pages/ProductDetails.jsx";
-
-
+import { Success } from './pages/Success.jsx';
+import { Failed } from './pages/Failed.jsx';
 
 
 // Create your first component
@@ -41,13 +40,15 @@ const Layout = () => {
                         <Route element={<Login />} path="/login" />
                         <Route element={<Profile />} path="/profile" />
                         <Route element={<WishList />} path="/wishes" />
+                        <Route element={<Success />} path="/success" />
+                        <Route element={<Failed />} path="/failed" />
                         <Route element={<ShoppingCart />} path="/cart" />
                         <Route element={<Demo />} path="/demo" />
                         <Route element={<Single />} path="/single/:theid" />
                         <Route element={<Signup />} path="/signup" />
                         <Route element={<h1>Not found!</h1>} />
                     </Routes>
-                    
+
                     <Footer />
                 </ScrollToTop>
             </BrowserRouter>

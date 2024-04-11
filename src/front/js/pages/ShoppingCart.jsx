@@ -8,9 +8,8 @@ export const ShoppingCart = () => {
     useEffect(() => {
         const fetchData = async () => {
             const id = 1;
-            const url = `https://orange-doodle-v476gjj4wj6fjwx-3001.app.github.dev/api/cart/` + id;
+            const url = `https://friendly-space-enigma-r9v4r559xvqhprg6-3001.app.github.dev/api/carts/` + id;
             const token = localStorage.getItem('token');
-
             try {
                 const response = await fetch(url, {
                     method: 'GET',
@@ -26,7 +25,7 @@ export const ShoppingCart = () => {
 
                 const data = await response.json();
                 // Suponiendo que data ya contiene los items del carrito bajo data.items
-                actions.cart(data); // Actualiza el store global con los datos obtenidos
+                actions.carts(data); // Actualiza el store global con los datos obtenidos
                 setIsLoading(false);
             } catch (error) {
                 console.error("Error al obtener los datos del carrito:", error);
@@ -35,7 +34,34 @@ export const ShoppingCart = () => {
         };
 
         fetchData();
-    }, [actions]); // Añade las dependencias necesarias aquí
+    }, [actions]);
+
+    const handleCheckout = async () => {
+        const email = "user@example.com"; // Este email debería ser dinámico o estar almacenado en el store/context
+        const products = store.carts.map(item => ({ product_id: item.product_id, quantity: item.quantity }));
+
+        try {
+            const response = await fetch('https://friendly-space-enigma-r9v4r559xvqhprg6-3001.app.github.dev/api/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, products }), // Nota el cambio aquí a 'products'
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Redirecciona al usuario a la URL de checkout de Stripe
+                window.location.href = data.checkout_url;
+            } else {
+                // Maneja errores
+                console.error('Error en el checkout:', data.error);
+            }
+        } catch (error) {
+            console.error('Error al conectar con el backend:', error);
+        }
+    };
 
     return (
         <div>
@@ -47,13 +73,18 @@ export const ShoppingCart = () => {
                     ) : store.carts ? (
                         <ul>
                             {store.carts.map((item, index) => (
-                                <li key={index}>{item.name}: {item.quantity}</li> // Asegúrate de ajustar según la estructura real de tus ítems
+                                <li key={index}>Producto {item.product_name} <br /> Cantidad {item.quantity}</li> // Asegúrate de ajustar según la estructura real de tus ítems
                             ))}
                         </ul>
                     ) : (
                         <p>No se encontraron ítems en el carrito.</p>
                     )}
                 </div>
+                {!isLoading && store.carts.length > 0 && (
+                    <button onClick={handleCheckout} className="btn btn-success ms-2">
+                        Pagar
+                    </button>
+                )}
             </div>
         </div>
     );

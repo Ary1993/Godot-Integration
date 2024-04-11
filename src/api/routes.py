@@ -8,12 +8,14 @@ from api.models import db, Users, Products, Wishes, ShoppingCarts, ShoppingCartI
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
+from flask_mail import Mail, Message
 import stripe
 import os
 
 api = Blueprint('api', __name__)
 CORS(api)  # Allow CORS requests to this API
 stripe.api_key = os.getenv("stripe.api_test")
+mail = Mail()
 
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
@@ -182,35 +184,34 @@ def checkout():
     try:
         json_data = request.get_json(force=True)
         email = json_data.get('email')
-        product_ids = json_data.get('product_ids', [])
+        products = json_data.get('products', []) # Ajuste para recibir 'products'
 
-        if not email or not product_ids:
-            return jsonify({'error': 'Email and product IDs are required'}), 400
+        if not email or not products:
+            return jsonify({'error': 'Email and product details are required'}), 400
 
-        # Busca los Stripe price IDs en tu base de datos para cada producto ID recibido
         line_items = []
-        for prod_id in product_ids:
-            product = Products.query.filter_by(id=prod_id, is_active=True).first()
+        for prod in products:
+            product_id = prod.get('product_id')
+            quantity = prod.get('quantity', 1) # Asegúrate de manejar un valor predeterminado
+            product = Products.query.filter_by(id=product_id, is_active=True).first()
             if product:
                 line_items.append({
                     'price': product.stripe_key,
-                    'quantity': 1,
+                    'quantity': quantity,
                 })
 
         if not line_items:
             return jsonify({'error': 'No valid products found'}), 400
 
-        # Crea una nueva sesión de checkout con Stripe
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             customer_email=email,
             line_items=line_items,
             mode='payment',
-            success_url='https://example.com/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='https://example.com/cancel',
+            success_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/failed',
         )
 
-        # Retorna la URL de la sesión para redirigir al usuario
         return jsonify({'checkout_url': checkout_session.url})
     except Exception as e:
         return jsonify({'error': str(e)}), 400
@@ -296,10 +297,19 @@ def hundle_cart(cart_id):
     if  current_user["id"] != cart.user_id:
         return jsonify({'message': 'no autorizado'}), 404
     if request.method == 'GET': 
-        # Obtener los ítems del carrito
+        # Obtener los ítems del carrito, asegurando que el producto esté cargado
         items = ShoppingCartItems.query.filter_by(shopping_cart_id=cart_id).all()
-        serialized_items = [item.serialize() for item in items]
-        # Serializar el carrito junto con los ítems
+        serialized_items = []
+        for item in items:
+            serialized_item = {
+                'id': item.id,
+                'price': item.price,
+                'product_id': item.product_id,
+                'quantity': item.quantity,
+                'shopping_cart_id': item.shopping_cart_id,
+                'product_name': item.products.name  # Agregando el nombre del producto aquí
+            }
+            serialized_items.append(serialized_item)
         cart_data = cart.serialize()
         cart_data['items'] = serialized_items
         return jsonify(cart_data), 200
@@ -513,3 +523,70 @@ def delete_product_from_store(store_id):
     db.session.commit()
 
     return jsonify({"message": "Producto eliminado exitosamente de la tienda"}), 200
+
+
+@api.route('/subscribe', methods=['POST'])
+def subscribe():
+    email = request.json.get('email')
+    if not email:
+        return jsonify({"message": "Por favor, envía un email"}), 400
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Suscripción Exitosa</title>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                margin: 0;
+                padding: 20px;
+                background-color: #f4f4f4;
+                color: #333;
+                text-align: center;
+            }
+            .container {
+                background-color: #fff;
+                margin: auto;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                max-width: 600px;
+            }
+            h1 {
+                color: #0066cc;
+            }
+            p {
+                margin: 20px 0;
+            }
+            .btn {
+                display: inline-block;
+                background-color: #0066cc;
+                color: #ffffff;
+                padding: 10px 20px;
+                border-radius: 5px;
+                text-decoration: none;
+                font-weight: bold;
+            }
+            .btn:hover {
+                background-color: #0056b3;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Suscripción Exitosa</h1>
+            <p>¡Gracias por suscribirte a nuestro boletín! Pronto empezarás a recibir actualizaciones exclusivas y contenido de calidad directamente en tu bandeja de entrada.</p>
+            <a href="https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/" class="btn">Visitar Sitio</a>
+        </div>
+    </body>
+    </html>
+    """
+    msg = Message("Suscripción Exitosa",
+                  sender="pppmfg@gmail.com",
+                  recipients=[email])
+    msg.body = "Este es un mensaje de texto para clientes de correo que no soportan HTML."
+    msg.html = html_content  
+    mail.send(msg)
+    return jsonify({"message": "¡Suscripción exitosa!"}), 200
