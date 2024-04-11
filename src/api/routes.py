@@ -70,6 +70,7 @@ def login():
             {
                 "id": wish.id,  # Acceder directamente a los atributos del modelo Wishes
                 "name": product_name,  # 'product_name' es el nombre del producto, obtenido directamente de la consulta
+                "product_id": wish.product_id,
             } for wish, product_name in wishes
         ]
         # Agrega los deseos serializados al cuerpo de la respuesta
@@ -187,6 +188,7 @@ def add_to_wished():
         db.session.add(wish)
         db.session.commit()
         response_body["message"]= "Responde el POST"
+        response_body["results"] = wish.serialize()
         return response_body
 
 @api.route('/wishes/<int:wish_id>', methods=['DELETE'])
