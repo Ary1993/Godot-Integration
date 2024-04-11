@@ -29,10 +29,10 @@ const getState = ({ getStore, getActions, setStore }) => {
       },
       updateWishes: async () => {
         // Retrieve wishes from local storage first
-        const storedWishes = JSON.parse(localStorage.getItem("wishes")) || [];
+        const storedWishes = JSON.parse(localStorage.getItem("wishes"));
 
         // Check if there are no wishes to update
-        if (storedWishes.length === 0) {
+        if (!storedWishes) {
           console.log("No stored wishes to update.");
           return;
         }
@@ -51,17 +51,13 @@ const getState = ({ getStore, getActions, setStore }) => {
             },
             body: JSON.stringify(dataToSend),
           });
-
           if (!response.ok) {
             console.log("error", response.status, response.statusText)
           }
-
           // Optionally, process response data
           const data = await response.json();
           console.log('Wish updated:', data);
-
         }
-
         // After updating, optionally refresh the list from the backend or update the local state as necessary
       },
       addWishes: async (newFavorite) => {
@@ -94,11 +90,8 @@ const getState = ({ getStore, getActions, setStore }) => {
           if (!response.ok) {
             console.log("error", response.status, response.statusText)
           };
-
           const data = await response.json();
           console.log("Wish added", data);
-
-
         }
       },
       //25.3 41.11 , 44.44
@@ -106,12 +99,19 @@ const getState = ({ getStore, getActions, setStore }) => {
         setStore({ wishes: array.filter((element) => element != item) })
       },
       verifyLogin: () => {
+        if (!localStorage.getItem("user")) {
+          localStorage.clear()
+          return
+        }
+
         // Verify Loggin : si el tokern existe en el local storage, quiere decir que esta logeado   
-        if (localStorage.getItem("token")) {
+        if (!localStorage.getItem("token")) {
+          localStorage.clear();
+          return
+        }
+        else {
           setStore({ isLogin: true })
           setStore({ user: JSON.parse(localStorage.getItem("user")) })
-          setStore({ wishes: JSON.parse(localStorage.getItem("wishes")) })
-          setStore({ cart: JSON.parse(localStorage.getItem("cart")) })
           //localStorage.setItem()
         }
         else {
@@ -121,6 +121,8 @@ const getState = ({ getStore, getActions, setStore }) => {
             setStore({ wishes: [] })
           }
         }
+        //Preguntar como el cart igual que con wishes
+        //setStore({ cart: JSON.parse(localStorage.getItem("cart")) })
       },
       getProducts: async () => {
         // aqui se obtiene los productos 

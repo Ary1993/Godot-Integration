@@ -36,9 +36,7 @@ export const ProductsList = () => {
                                 <div className="card-body">
                                     <h5 className="card-title">{product.name}</h5>
                                     <p className='card-text'>
-                                        ID: {product.id}
-                                        <br />
-                                        ${product.price}.00
+                                        $ {product.price}.00
                                     </p>
                                 </div>
                                 <div className="d-flex justify-content-between">
