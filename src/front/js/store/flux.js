@@ -76,14 +76,15 @@ const getState = ({ getStore, getActions, setStore }) => {
           console.log('Wish already exists in the store');
           return; // Stop execution if the wish already exists
         }
-        let newWish = { 
+        let newWish = {
           id: null,
           product_id: newFavorite.id,
           name: newFavorite.name
-       };
+        };
         if (isUserLoggedIn) {
           //If User is logged Update db post wishes 
-          const wishData = {product_id: newFavorite.id
+          const wishData = {
+            product_id: newFavorite.id
           };
           const url = process.env.BACKEND_URL + "/api/wishes";
 
@@ -134,8 +135,15 @@ const getState = ({ getStore, getActions, setStore }) => {
           const data = await response.json();
           console.log("Wish deleted", data);
         }
-        setStore({ wishes: array.filter((element) => element != wishId) })
-        localStorage.setItem("wishes", JSON.stringify(store.wishes)); // Synchronize the update with localStorage
+        console.log("Update local");
+        // Get the current array of wishes from local storage
+        let wishes = JSON.parse(localStorage.getItem("wishes")) || [];
+
+        // Filter out the wish with the given ID
+        wishes = wishes.filter(wish => wish.id !== wishId);
+
+        // Set the updated array back into local storage
+        localStorage.setItem("wishes", JSON.stringify(wishes));
       },
       verifyLogin: () => {
         if (!localStorage.getItem("user")) {
