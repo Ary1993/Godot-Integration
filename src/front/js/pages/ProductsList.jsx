@@ -8,11 +8,13 @@ export const ProductsList = () => {
 
     // Function to toggle the favorite status of a product
     const toggleFavorite = (product) => {
-        const isFavorite = store.wishes.some(wish => wish.id === product.id);
+        const isFavorite = store.wishes.some(wish => wish.product_id === product.id);
+        console.log(isFavorite);
         if (isFavorite) {
+            console.log("Removiendo...")
             // Remove from wishes if it is already a favorite
-            const updatedWishes = store.wishes.filter(wish => wish.id !== product.id);
-            actions.removeWishes(product, updatedWishes); // Assuming removeWishes accepts the product and the new array of wishes
+            //const updatedWishes = store.wishes.filter(wish => wish.id !== product.id);
+            actions.removeWishes(isFavorite.id); // Assuming removeWishes accepts the product and the new array of wishes
         } else {
             // Add to wishes if it is not a favorite
             actions.addWishes(product);

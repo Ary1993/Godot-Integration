@@ -36,7 +36,7 @@ export const Signup = () => {
         actions.login(data);
         // Now update wishes
        // await actions.updateWishes();
-        navigate("/profile");
+      //  navigate("/profile");
     }
     return (
        

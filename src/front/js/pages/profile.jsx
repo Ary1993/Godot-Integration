@@ -7,7 +7,7 @@ export const Profile = () => {
     const { store, actions } = useContext(Context);
 
     return (
-        !store.user ? <Navigate to="/login" /> :
+        !store.user ? <Navigate to="/" /> :
             <div>
                 <div className="card d-flex align-center" style={{ width: "18rem" }}>
                     <div className="card-body">
