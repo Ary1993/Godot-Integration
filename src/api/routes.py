@@ -8,12 +8,14 @@ from api.models import db, Users, Products, Wishes, ShoppingCarts, ShoppingCartI
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
+from flask_mail import Mail, Message
 import stripe
 import os
 
 api = Blueprint('api', __name__)
 CORS(api)  # Allow CORS requests to this API
 stripe.api_key = os.getenv("stripe.api_test")
+mail = Mail()
 
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
@@ -550,3 +552,70 @@ def delete_product_from_store(store_id):
     db.session.commit()
 
     return jsonify({"message": "Producto eliminado exitosamente de la tienda"}), 200
+
+
+@api.route('/subscribe', methods=['POST'])
+def subscribe():
+    email = request.json.get('email')
+    if not email:
+        return jsonify({"message": "Por favor, envía un email"}), 400
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Suscripción Exitosa</title>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                margin: 0;
+                padding: 20px;
+                background-color: #f4f4f4;
+                color: #333;
+                text-align: center;
+            }
+            .container {
+                background-color: #fff;
+                margin: auto;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                max-width: 600px;
+            }
+            h1 {
+                color: #0066cc;
+            }
+            p {
+                margin: 20px 0;
+            }
+            .btn {
+                display: inline-block;
+                background-color: #0066cc;
+                color: #ffffff;
+                padding: 10px 20px;
+                border-radius: 5px;
+                text-decoration: none;
+                font-weight: bold;
+            }
+            .btn:hover {
+                background-color: #0056b3;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Suscripción Exitosa</h1>
+            <p>¡Gracias por suscribirte a nuestro boletín! Pronto empezarás a recibir actualizaciones exclusivas y contenido de calidad directamente en tu bandeja de entrada.</p>
+            <a href="https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/" class="btn">Visitar Sitio</a>
+        </div>
+    </body>
+    </html>
+    """
+    msg = Message("Suscripción Exitosa",
+                  sender="pppmfg@gmail.com",
+                  recipients=[email])
+    msg.body = "Este es un mensaje de texto para clientes de correo que no soportan HTML."
+    msg.html = html_content  
+    mail.send(msg)
+    return jsonify({"message": "¡Suscripción exitosa!"}), 200

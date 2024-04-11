@@ -51,17 +51,13 @@ const getState = ({ getStore, getActions, setStore }) => {
             },
             body: JSON.stringify(dataToSend),
           });
-
           if (!response.ok) {
             console.log("error", response.status, response.statusText)
           }
-
           // Optionally, process response data
           const data = await response.json();
           console.log('Wish updated:', data);
-
         }
-
         // After updating, optionally refresh the list from the backend or update the local state as necessary
       },
       addWishes: async (newFavorite) => {
@@ -94,11 +90,8 @@ const getState = ({ getStore, getActions, setStore }) => {
           if (!response.ok) {
             console.log("error", response.status, response.statusText)
           };
-
           const data = await response.json();
           console.log("Wish added", data);
-
-
         }
       },
       //25.3 41.11 , 44.44
@@ -120,6 +113,8 @@ const getState = ({ getStore, getActions, setStore }) => {
           setStore({ isLogin: true })
           setStore({ user: JSON.parse(localStorage.getItem("user")) })
           //localStorage.setItem()
+        }
+        else {
           if (localStorage.getItem("wishes")) {
             setStore({ wishes: JSON.parse(localStorage.getItem("wishes")) })
           } else {

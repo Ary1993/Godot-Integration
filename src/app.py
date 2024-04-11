@@ -11,6 +11,7 @@ from api.admin import setup_admin
 from api.commands import setup_commands
 from api.models import db
 from flask_cors import CORS
+from flask_mail import Mail
 
 from flask_jwt_extended import JWTManager
 # from models import Person
@@ -42,6 +43,16 @@ app.register_blueprint(api, url_prefix='/api')
 # Setup the Flask-JWT-Extended extension
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")  # Change this! Semilla 
 jwt = JWTManager(app)
+
+# Configuración de Mailtrap
+app.config['MAIL_SERVER']='sandbox.smtp.mailtrap.io'
+app.config['MAIL_PORT'] = 2525
+app.config['MAIL_USERNAME'] = 'cf0aa298c0b412'
+app.config['MAIL_PASSWORD'] = '9ae6df4d345758'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_DEFAULT_SENDER'] = "sandbox.smtp.mailtrap.io"
+mail = Mail(app)
 
 
 # Handle/serialize errors like a JSON object
