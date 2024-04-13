@@ -13,21 +13,7 @@ export const Login = () => {
             email: email,
             password: password
         }
-        const url = process.env.BACKEND_URL + "/api/login"
-        const options = {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(dataToSend)
-        }
-        const response = await fetch(url, options);
-        if (!response.ok) {
-            console.log("error", response.status, response.statusText);
-            return
-        }
-        const data = await response.json()
-        actions.login(data);
+        await actions.handleLogin(dataToSend.email,dataToSend.password);
     }
 
 

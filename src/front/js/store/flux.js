@@ -33,6 +33,27 @@ const getState = ({ getStore, getActions, setStore }) => {
         });
         localStorage.clear();
       },
+      handleLogin: async (email,password) => {
+        const dataToSend = {
+          email: email,
+          password: password
+        }
+        const url = process.env.BACKEND_URL + "/api/login"
+        const options = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(dataToSend)
+        }
+        const response = await fetch(url, options);
+        if (!response.ok) {
+          console.log("error", response.status, response.statusText);
+          return
+        }
+        const data = await response.json()
+        await getActions().login(data);
+      },
       updateWishes: async (data) => {
         // Retrieve wishes from local storage first
         const storedWishes = JSON.parse(localStorage.getItem("wishes"));

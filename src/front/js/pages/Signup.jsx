@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import { Context } from "../store/appContext.js";
-import {useNavigate} from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 export const Signup = () => {
     const [email, setEmail] = useState("");
@@ -33,10 +33,10 @@ export const Signup = () => {
         const data = await response.json()
         console.log(data)
         localStorage.setItem("token", data.access_token)
-        actions.login(data);
+        await actions.handleLogin(dataToSend.email,dataToSend.password);
     }
     return (
-       
+        store.isLogin ? <Navigate to="/profile" /> :
             <div className="container mt-5">
                 <h1 className="text-center"> Formulario de registro </h1>
                 <form onSubmit={handleSignup}>
