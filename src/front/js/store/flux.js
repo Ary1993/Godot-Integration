@@ -47,9 +47,9 @@ const getState = ({ getStore, getActions, setStore }) => {
         for (const wish of storedWishes) {
           // 1. Verifico si el wish ya esta en el back (data.wishes)
           //2. En caso en que este no tengo que ejecutar todo el fetch si no tengo volver al siguiente wish (ver continue)
-          if (existingWishes.some(e => e.product_id === wish.product_id)) {
-            console.log(`El deseo para el producto ${wish.product_id} ya está registrado.`);
-            continue; // Salta al siguiente deseo
+          if (data.wishes.some(e => e.product_id === wish.product_id)) { // Use data.wishes instead of data
+            console.log(`The wish for the product ${wish.product_id} is already registered.`);
+            continue; // Skip to the next wish
           }
           const dataToSend = {
             "product_id": wish.product_id
