@@ -44,6 +44,7 @@ app.register_blueprint(api, url_prefix='/api')
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")  # Change this! Semilla 
 jwt = JWTManager(app)
 
+# Configuración de Mailtrap
 app.config['MAIL_SERVER']='sandbox.smtp.mailtrap.io'
 app.config['MAIL_PORT'] = 2525
 app.config['MAIL_USERNAME'] = 'cf0aa298c0b412'

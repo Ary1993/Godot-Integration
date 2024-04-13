@@ -6,7 +6,7 @@ const getState = ({ getStore, getActions, setStore }) => {
       { title: "SECOND", background: "white", initial: "white" }],
       isLogin: false,
       user: null,
-      carts: null,
+      cart: null,
       products: null,
       wishes: []
     },
@@ -14,8 +14,12 @@ const getState = ({ getStore, getActions, setStore }) => {
       login: (data) => {
         console.log(data);
         setStore({ isLogin: true });
-        setStore({ user: data.results })
-        localStorage.setItem("user", JSON.stringify(data.results))
+        setStore({ user: data.user })
+        localStorage.setItem("user", JSON.stringify(data.user))
+        setStore({ wishes: data.wishes })
+        localStorage.setItem("wishes", JSON.stringify(data.wishes))
+        setStore({ cart: data.cart })
+        localStorage.setItem("cart", JSON.stringify(data.cart))
       },
       carts: (data) => {
         setStore({ isLogin: true });
@@ -27,17 +31,17 @@ const getState = ({ getStore, getActions, setStore }) => {
           isLogin: false,
           wishes: [], // Reset wishes in the state
           user: null, // Consider also resetting the user info if needed
+          cart: null,
           // Any other state properties you might want to reset upon logout
         });
-        localStorage.removeItem("token");
-        localStorage.removeItem("wishes"); // Clear wishes from local storage
+        localStorage.clear();
       },
       updateWishes: async () => {
         // Retrieve wishes from local storage first
-        const storedWishes = JSON.parse(localStorage.getItem("wishes")) || [];
+        const storedWishes = JSON.parse(localStorage.getItem("wishes"));
 
         // Check if there are no wishes to update
-        if (storedWishes.length === 0) {
+        if (!storedWishes) {
           console.log("No stored wishes to update.");
           return;
         }
@@ -46,7 +50,7 @@ const getState = ({ getStore, getActions, setStore }) => {
         for (const wish of storedWishes) {
           // Example: update each wish in the backend
           const dataToSend = {
-            product_id: wish.id
+            product_id: wish.id.product_id
           };
           const response = await fetch(`${process.env.BACKEND_URL}/api/wishes`, {
             method: 'POST', // Or 'PUT', depending on your backend setup
@@ -60,26 +64,26 @@ const getState = ({ getStore, getActions, setStore }) => {
           if (!response.ok) {
             console.log("error", response.status, response.statusText)
           }
-
           // Optionally, process response data
           const data = await response.json();
           console.log('Wish updated:', data);
 
         }
-
         // After updating, optionally refresh the list from the backend or update the local state as necessary
       },
       addWishes: async (newFavorite) => {
         const isUserLoggedIn = getStore().isLogin;
         // Check if the wish is already in the local store to avoid duplicates
-        const wishExists = getStore().wishes.some(wish => wish.id === newFavorite.id);
+        const wishExists = getStore().wishes.some(wish => wish.product_id === newFavorite.id);
         if (wishExists) {
           console.log('Wish already exists in the store');
           return; // Stop execution if the wish already exists
         }
-        //filtro update store
-        setStore({ wishes: [...getStore().wishes, newFavorite] });
-        localStorage.setItem("wishes", JSON.stringify(getStore().wishes));
+        let newWish = {
+          id: null,
+          product_id: newFavorite.id,
+          name: newFavorite.name
+        };
         if (isUserLoggedIn) {
           //If User is logged Update db post wishes 
           const wishData = {
@@ -98,34 +102,78 @@ const getState = ({ getStore, getActions, setStore }) => {
 
           if (!response.ok) {
             console.log("error", response.status, response.statusText)
+            return
           };
-
           const data = await response.json();
+          newWish = {
+            id: data.results.id
+          };
           console.log("Wish added", data);
-
-
         }
+        setStore({ wishes: [...getStore().wishes, newWish] });
+        localStorage.setItem("wishes", JSON.stringify(getStore().wishes));
       },
       //25.3 41.11 , 44.44
-      removeWishes: (item, array) => {
-        setStore({ wishes: array.filter((element) => element != item) })
+      removeWishes: async (wishId) => {
+        const isUserLoggedIn = getStore().isLogin;
+        const store = getStore(); // Get the current state
+
+        if (isUserLoggedIn) {
+          //If User is logged Update db post wishes 
+          const url = process.env.BACKEND_URL + "/api/wishes/" + wishId;
+
+          const response = await fetch(url, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${localStorage.getItem("token")}`
+            },
+          });
+
+          if (!response.ok) {
+            console.log("error", response.status, response.statusText)
+            return
+          };
+          const data = await response.json();
+          console.log("Wish deleted", data);
+        }
+        console.log("Update local");
+        // Get the current array of wishes from local storage
+        let wishes = JSON.parse(localStorage.getItem("wishes")) || [];
+
+        // Filter out the wish with the given ID
+        wishes = wishes.filter(wish => wish.id !== wishId);
+
+        // Set the updated array back into local storage
+        localStorage.setItem("wishes", JSON.stringify(wishes));
       },
       verifyLogin: () => {
+        if (!localStorage.getItem("user")) {
+          localStorage.clear()
+          return
+        }
+
         // Verify Loggin : si el tokern existe en el local storage, quiere decir que esta logeado   
-        if (localStorage.getItem("token")) {
-          setStore({ isLogin: true })
-          setStore({ user: JSON.parse(localStorage.getItem("user")) })
-          setStore({ wishes: JSON.parse(localStorage.getItem("wishes")) })
-          setStore({ cart: JSON.parse(localStorage.getItem("cart")) })
-          //localStorage.setItem()
+        if (!localStorage.getItem("token")) {
+          localStorage.clear();
+          return
+        }
+        if (!localStorage.getItem("user")) {
+          localStorage.clear()
+          return
         }
         else {
+          setStore({ isLogin: true })
+          setStore({ user: JSON.parse(localStorage.getItem("user")) })
+          //localStorage.setItem()
+        } 
           if (localStorage.getItem("wishes")) {
             setStore({ wishes: JSON.parse(localStorage.getItem("wishes")) })
-          } else {
+          } {
             setStore({ wishes: [] })
           }
-        }
+        //Preguntar como el cart igual que con wishes
+        //setStore({ cart: JSON.parse(localStorage.getItem("cart")) })
       },
       getProducts: async () => {
         // aqui se obtiene los productos 
