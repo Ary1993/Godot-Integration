@@ -169,7 +169,7 @@ const getState = ({ getStore, getActions, setStore }) => {
         } 
           if (localStorage.getItem("wishes")) {
             setStore({ wishes: JSON.parse(localStorage.getItem("wishes")) })
-          } else {
+          } {
             setStore({ wishes: [] })
           }
         //Preguntar como el cart igual que con wishes
