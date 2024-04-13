@@ -35,8 +35,7 @@ export const Signup = () => {
         localStorage.setItem("token", data.access_token)
         actions.login(data);
         // Now update wishes
-       // await actions.updateWishes();
-      //  navigate("/profile");
+        //await actions.updateWishes(data);
     }
     return (
        

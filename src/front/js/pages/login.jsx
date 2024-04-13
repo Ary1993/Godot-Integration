@@ -6,6 +6,8 @@ export const Login = () => {
     const { store, actions } = useContext(Context)
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+
+
     const handleOnClick = async () => {
         const dataToSend = {
             email: email,
@@ -26,10 +28,8 @@ export const Login = () => {
         }
         const data = await response.json()
         actions.login(data);
-        localStorage.setItem("token", data.access_token)
-        // Now update wishes
-        await actions.updateWishes();
     }
+
 
     return (
         store.isLogin ? <Navigate to="/profile" /> :

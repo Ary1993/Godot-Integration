@@ -3,27 +3,32 @@ import { Link } from "react-router-dom";
 import { Context } from '../store/appContext';
 
 
+
 export const ProductsList = () => {
     const { store, actions } = useContext(Context);
-
     // Function to toggle the favorite status of a product
     const toggleFavorite = (product) => {
-        const isFavorite = store.wishes.some(wish => wish.product_id === product.id);
-        console.log(isFavorite);
-        if (isFavorite) {
-            console.log("Removiendo...")
-            // Remove from wishes if it is already a favorite
-            //const updatedWishes = store.wishes.filter(wish => wish.id !== product.id);
-            actions.removeWishes(isFavorite.id); // Assuming removeWishes accepts the product and the new array of wishes
-        } else {
-            // Add to wishes if it is not a favorite
-            actions.addWishes(product);
+        console.log(store.isLogin);
+        if (store.isLogin) {
+
+        }
+        else {
+            const isFavorite = store.wishes.filter(wish => wish.product_id === product.id);
+            console.log(isFavorite);
+            if (isFavorite.length === 0) {
+                console.log("Igual a cero");
+                actions.addWishes(product);
+            } else {
+                console.log("Distinto que cero");
+                actions.removeWishes(isFavorite[0].id, product.id); // Assuming removeWishes accepts the product and the new array of wishes
+            }
         }
     }
 
+
     // Function to return the appropriate class for the heart icon
     const getHeartClass = (product) => {
-       // return store.wishes.filter(wish => wish.id == product.id) ? "fas fa-heart text-warning" : "far fa-heart";
+        return store.wishes.some(wish => wish.id == product.id) ? "fas fa-heart text-warning" : "far fa-heart";
     }
 
     return (
