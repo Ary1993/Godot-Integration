@@ -160,10 +160,10 @@ const getState = ({ getStore, getActions, setStore }) => {
           setStore({ user: JSON.parse(localStorage.getItem("user")) })
           //localStorage.setItem()
         }
-        else {
+        {
           if (localStorage.getItem("wishes")) {
             setStore({ wishes: JSON.parse(localStorage.getItem("wishes")) })
-          } else {
+          } {
             setStore({ wishes: [] })
           }
         }

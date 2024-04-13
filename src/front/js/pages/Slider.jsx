@@ -16,15 +16,15 @@ export const Slider = () => {
         }} />
       <Carousel>
         <Carousel.Item>
-          <Link to="/product/">
+          <Link to="/product/2">
             <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/v1712251976/CoD4.png.jpg" alt="First slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
-          <Link to="/product/1">
+          <Link to="/product/2">
             <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/v1712251592/GTAsanandreas.png.jpg" alt="Second slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
-          <Link to="/product/">
+          <Link to="/product/2">
             <img src="https://cdn1.epicgames.com/offer/3ddd6a590da64e3686042d108968a6b2/EGS_GodofWar_SantaMonicaStudio_S2_1200x1600-fbdf3cbc2980749091d52751ffabb7b7_1200x1600-fbdf3cbc2980749091d52751ffabb7b7" alt="Sixth slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
