@@ -9,26 +9,23 @@ export const ProductsList = () => {
     // Function to toggle the favorite status of a product
     const toggleFavorite = (product) => {
         console.log(store.isLogin);
-        if (store.isLogin) {
 
+        const isFavorite = store.wishes.filter(wish => wish.product_id === product.id);
+        console.log(isFavorite);
+        if (isFavorite.length === 0) {
+            console.log("Igual a cero");
+            actions.addWishes(product);
+        } else {
+            console.log("Distinto que cero");
+            actions.removeWishes(isFavorite[0].id, product.id); // Assuming removeWishes accepts the product and the new array of wishes
         }
-        else {
-            const isFavorite = store.wishes.filter(wish => wish.product_id === product.id);
-            console.log(isFavorite);
-            if (isFavorite.length === 0) {
-                console.log("Igual a cero");
-                actions.addWishes(product);
-            } else {
-                console.log("Distinto que cero");
-                actions.removeWishes(isFavorite[0].id, product.id); // Assuming removeWishes accepts the product and the new array of wishes
-            }
-        }
+
     }
 
 
     // Function to return the appropriate class for the heart icon
     const getHeartClass = (product) => {
-        return store.wishes.some(wish => wish.id == product.id) ? "fas fa-heart text-warning" : "far fa-heart";
+        return store.wishes.some(wish => wish.product_id == product.id) ? "fas fa-heart text-warning" : "far fa-heart";
     }
 
     return (

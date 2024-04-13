@@ -34,8 +34,6 @@ export const Signup = () => {
         console.log(data)
         localStorage.setItem("token", data.access_token)
         actions.login(data);
-        // Now update wishes
-        //await actions.updateWishes(data);
     }
     return (
        
