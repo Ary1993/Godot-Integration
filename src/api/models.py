@@ -139,6 +139,7 @@ class ShoppingCartItems(db.Model):
                 "shopping_cart_id": self.shopping_cart_id,
                 "product_id": self.product_id,
                 "quantity": self.quantity,
+                "product_name": self.product.name,
                 "price": self.price}
 
 

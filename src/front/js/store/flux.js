@@ -21,6 +21,11 @@ const getState = ({ getStore, getActions, setStore }) => {
         setStore({ cart: data.cart })
         localStorage.setItem("cart", JSON.stringify(data.cart))
       },
+      carts: (data) => {
+        setStore({ isLogin: true });
+        setStore({ carts: data.items })
+        localStorage.setItem("carts", JSON.stringify(data.items))
+      },
       logout: () => {
         setStore({
           isLogin: false,
@@ -45,7 +50,7 @@ const getState = ({ getStore, getActions, setStore }) => {
         for (const wish of storedWishes) {
           // Example: update each wish in the backend
           const dataToSend = {
-            product_id: wish.product_id
+            product_id: wish.id.product_id
           };
           const response = await fetch(`${process.env.BACKEND_URL}/api/wishes`, {
             method: 'POST', // Or 'PUT', depending on your backend setup
@@ -55,12 +60,14 @@ const getState = ({ getStore, getActions, setStore }) => {
             },
             body: JSON.stringify(dataToSend),
           });
+
           if (!response.ok) {
             console.log("error", response.status, response.statusText)
           }
           // Optionally, process response data
           const data = await response.json();
           console.log('Wish updated:', data);
+
         }
         // After updating, optionally refresh the list from the backend or update the local state as necessary
       },
