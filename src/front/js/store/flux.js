@@ -162,7 +162,27 @@ const getState = ({ getStore, getActions, setStore }) => {
         setStore({ wishes: data.results })
         //localStorage.setItem("products", JSON.stringify(data))
       },
+      setCart: (cartData) => {
+        setStore({ carts: cartData });  // Establece el carrito en el estado global
+        localStorage.setItem('carts', JSON.stringify(cartData));  // Opcionalmente, guarda el carrito en localStorage
+      },
 
+      removeItemFromCart: (itemId) => {
+        const store = getStore();  // Obtiene el estado actual
+        if (store.carts && store.carts.items) {
+          const updatedItems = store.carts.items.filter(item => item.id !== itemId);  // Filtra el ítem que quieres remover
+          const updatedCart = { ...store.carts, items: updatedItems };  // Crea un nuevo objeto de carrito con los ítems actualizados
+          setStore({ carts: updatedCart });  // Actualiza el estado del carrito
+          localStorage.setItem('carts', JSON.stringify(updatedCart));  // Actualiza el localStorage
+        }
+      },
+      clearCart: () => {
+        setStore({ carts: null });  // Esto establece el carrito a null, puedes ajustarlo según necesites
+        localStorage.removeItem("carts");  // Elimina el carrito del almacenamiento local
+      },
+      setCartId: (cartId) => {
+        setStore({ cartId });
+      },
       // Use getActions to call a function within a fuction
       exampleFunction: () => { getActions().changeColor(0, "green"); },
       getMessage: async () => {
