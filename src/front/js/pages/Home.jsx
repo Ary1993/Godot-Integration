@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
 import { Context } from "../store/appContext.js";
-import rigoImageUrl from "../../img/rigo-baby.jpg";
 import "../../styles/home.css";
 import { ProductsList } from "./ProductsList.jsx";
 import { Slider } from "./Slider.jsx";
+import { Newsletter } from "../component/Newsletter.jsx";
 
 
 
@@ -12,10 +12,6 @@ export const Home = () => {
 
   return (
     <div className="text-center mt-5">
-      <h1>Hello Rigo!!</h1>
-      <p>
-        <img src={rigoImageUrl} />
-      </p>
       <div className="alert alert-info">
         {store.message || "Loading message from the backend (make sure your python backend is running)..."}
       </div>
@@ -27,6 +23,7 @@ export const Home = () => {
           Read documentation
         </a>
       </p>
+      <Newsletter />
     </div>
   );
 };
