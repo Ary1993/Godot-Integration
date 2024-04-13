@@ -224,35 +224,34 @@ def checkout():
     try:
         json_data = request.get_json(force=True)
         email = json_data.get('email')
-        product_ids = json_data.get('product_ids', [])
+        products = json_data.get('products', []) # Ajuste para recibir 'products'
 
-        if not email or not product_ids:
-            return jsonify({'error': 'Email and product IDs are required'}), 400
+        if not email or not products:
+            return jsonify({'error': 'Email and product details are required'}), 400
 
-        # Busca los Stripe price IDs en tu base de datos para cada producto ID recibido
         line_items = []
-        for prod_id in product_ids:
-            product = Products.query.filter_by(id=prod_id, is_active=True).first()
+        for prod in products:
+            product_id = prod.get('product_id')
+            quantity = prod.get('quantity', 1) # Asegúrate de manejar un valor predeterminado
+            product = Products.query.filter_by(id=product_id, is_active=True).first()
             if product:
                 line_items.append({
                     'price': product.stripe_key,
-                    'quantity': 1,
+                    'quantity': quantity,
                 })
 
         if not line_items:
             return jsonify({'error': 'No valid products found'}), 400
 
-        # Crea una nueva sesión de checkout con Stripe
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             customer_email=email,
             line_items=line_items,
             mode='payment',
-            success_url='https://example.com/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='https://example.com/cancel',
+            success_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/failed',
         )
 
-        # Retorna la URL de la sesión para redirigir al usuario
         return jsonify({'checkout_url': checkout_session.url})
     except Exception as e:
         return jsonify({'error': str(e)}), 400
@@ -338,10 +337,19 @@ def hundle_cart(cart_id):
     if  current_user["id"] != cart.user_id:
         return jsonify({'message': 'no autorizado'}), 404
     if request.method == 'GET': 
-        # Obtener los ítems del carrito
+        # Obtener los ítems del carrito, asegurando que el producto esté cargado
         items = ShoppingCartItems.query.filter_by(shopping_cart_id=cart_id).all()
-        serialized_items = [item.serialize() for item in items]
-        # Serializar el carrito junto con los ítems
+        serialized_items = []
+        for item in items:
+            serialized_item = {
+                'id': item.id,
+                'price': item.price,
+                'product_id': item.product_id,
+                'quantity': item.quantity,
+                'shopping_cart_id': item.shopping_cart_id,
+                'product_name': item.products.name  # Agregando el nombre del producto aquí
+            }
+            serialized_items.append(serialized_item)
         cart_data = cart.serialize()
         cart_data['items'] = serialized_items
         return jsonify(cart_data), 200
