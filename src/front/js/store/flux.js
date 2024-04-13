@@ -166,14 +166,12 @@ const getState = ({ getStore, getActions, setStore }) => {
           setStore({ isLogin: true })
           setStore({ user: JSON.parse(localStorage.getItem("user")) })
           //localStorage.setItem()
-        }
-        else {
+        } 
           if (localStorage.getItem("wishes")) {
             setStore({ wishes: JSON.parse(localStorage.getItem("wishes")) })
           } else {
             setStore({ wishes: [] })
           }
-        }
         //Preguntar como el cart igual que con wishes
         //setStore({ cart: JSON.parse(localStorage.getItem("cart")) })
       },
