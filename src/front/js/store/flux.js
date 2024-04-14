@@ -6,7 +6,7 @@ const getState = ({ getStore, getActions, setStore }) => {
       { title: "SECOND", background: "white", initial: "white" }],
       isLogin: false,
       user: null,
-      cart: null,
+      carts: null,
       products: null,
       wishes: []
     },
@@ -15,13 +15,11 @@ const getState = ({ getStore, getActions, setStore }) => {
         console.log(data);
         setStore({ isLogin: true });
         localStorage.setItem("token", data.access_token)
-        setStore({ user: data.user })
-        localStorage.setItem("user", JSON.stringify(data.user))
+        setStore({ user: data.results })
+        localStorage.setItem("user", JSON.stringify(data.results))
         await getActions().updateWishes(data);
         //setStore({ wishes: data.wishes })
         //localStorage.setItem("wishes", JSON.stringify(data.wishes))
-        setStore({ cart: data.cart })
-        localStorage.setItem("cart", JSON.stringify(data.cart))
       },
       carts: (data) => {
         setStore({ isLogin: true });
@@ -33,7 +31,7 @@ const getState = ({ getStore, getActions, setStore }) => {
           isLogin: false,
           wishes: [], // Reset wishes in the state
           user: null, // Consider also resetting the user info if needed
-          cart: null,
+          carts: null,
           // Any other state properties you might want to reset upon logout
         });
         localStorage.clear();

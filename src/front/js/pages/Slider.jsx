@@ -34,7 +34,7 @@ export const Slider = () => {
           </Link>
         </Carousel.Item>
         <Carousel.Item>
-          <Link to="/product/">
+          <Link to="/product/1">
             <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/v1712251592/GTAsanandreas.png.jpg" alt="Second slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
