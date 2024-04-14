@@ -135,12 +135,15 @@ class ShoppingCartItems(db.Model):
         return f'<shopping_cart: {self.shopping_cart_id}> - <Shopping_Cart_item: {self.id}>'
 
     def serialize(self):
-        return {"id": self.id,
-                "shopping_cart_id": self.shopping_cart_id,
-                "product_id": self.product_id,
-                "quantity": self.quantity,
-                "product_name": self.product.name,
-                "price": self.price}
+        return {
+            "id": self.id,
+            "shopping_cart_id": self.shopping_cart_id,
+            "product_id": self.product_id,
+            "quantity": self.quantity,
+            "product_name": self.products.name,
+            "price": self.price,
+            "image_url": self.products.image_url
+        }
 
 
 class Stores(db.Model):

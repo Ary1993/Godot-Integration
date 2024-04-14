@@ -31,11 +31,23 @@ def login():
     response_body = {}
     email = request.json.get("email", None)
     password = request.json.get("password", None)
-    # Reemplazar por lógica consultando la DB.
     user = db.session.execute(db.select(Users).where(Users.email == email, Users.password == password, Users.is_active == True)).scalar()
-    if not user: 
-        response_body["message"] = "Email o pasword incorrecto"
+    if not user:
+        response_body["message"] = "Email o password incorrecto"
         return response_body, 401
+    access_token = create_access_token(identity=user.serialize())
+    response_body['access_token'] = access_token
+    response_body['message'] = "Usuario logeado con éxito"
+    user_info = user.serialize()
+    cart = db.session.query(ShoppingCarts).filter_by(user_id=user.id).first()
+    if not cart:
+        # Si no existe un carrito, crear uno nuevo
+        cart = ShoppingCarts(user_id=user.id)
+        db.session.add(cart)
+        db.session.commit()
+    # Incluir el ID del carrito existente o nuevo en la respuesta
+    user_info['cartId'] = cart.id
+    response_body['results'] = user_info
     response_body['user'] = user.serialize()
     # agregar en el result el carrito del user y sus items
     cart = db.session.execute(db.select(ShoppingCarts).where(ShoppingCarts.user_id == user.id)).scalar()
@@ -248,7 +260,7 @@ def checkout():
             customer_email=email,
             line_items=line_items,
             mode='payment',
-            success_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/success?session_id={CHECKOUT_SESSION_ID}',
+            success_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/success',
             cancel_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/failed',
         )
 
@@ -347,7 +359,8 @@ def hundle_cart(cart_id):
                 'product_id': item.product_id,
                 'quantity': item.quantity,
                 'shopping_cart_id': item.shopping_cart_id,
-                'product_name': item.products.name  # Agregando el nombre del producto aquí
+                'product_name': item.products.name,
+                "image_url": item.products.image_url  # Accede a la imagen a través de la relación products
             }
             serialized_items.append(serialized_item)
         cart_data = cart.serialize()
@@ -404,24 +417,24 @@ def agregar_producto():
     db.session.commit()
     return jsonify({'message': 'Producto agregado exitosamente al carrito', 'item_id': new_item.id}), 201
 
-# Ruta para borrar un ítem específico del carrito
-@api.route('/cart-items/<int:item_id>', methods=['DELETE'])
-@jwt_required()  # Requiere autenticación JWT
+@api.route('/carts/<int:cart_id>/items/<int:item_id>', methods=['DELETE'])
+@jwt_required()
 def borrar_item_carrito(cart_id, item_id):
     current_user_id = get_jwt_identity()
+    user_id = current_user_id['id']  # Extraer el ID del usuario desde el diccionario
+    print(f"Cart ID: {cart_id}, Current User ID: {current_user_id}")
+    
     cart = ShoppingCarts.query.get(cart_id)
-    if cart is None:
-        return jsonify({'message': 'Carrito no encontrado'}), 404
-
-    # Buscar el ítem en el carrito
+    print(f"Cart retrieved: {cart}")
+    if cart is None or cart.user_id != user_id:  # Usar user_id para la comparación
+        return jsonify({'message': 'Carrito no encontrado o acceso no autorizado'}), 404
+    
     item = ShoppingCartItems.query.filter_by(id=item_id, shopping_cart_id=cart_id).first()
     if item is None:
         return jsonify({'message': 'Ítem no encontrado en el carrito'}), 404
 
-    # Borrar el ítem del carrito
     db.session.delete(item)
     db.session.commit()
-    
     return jsonify({'message': 'Ítem del carrito eliminado exitosamente'}), 200
 
 
@@ -629,3 +642,26 @@ def subscribe():
     msg.html = html_content  
     mail.send(msg)
     return jsonify({"message": "¡Suscripción exitosa!"}), 200
+
+    from flask import jsonify, request
+
+@api.route('/clear-cart', methods=['POST'])
+@jwt_required()
+def clear_cart():
+    try:
+        user_identity = get_jwt_identity()
+        user_id = user_identity['id']  # Obteniendo el ID del usuario del token JWT
+
+        # Encuentra el carrito del usuario basado en user_id
+        cart = ShoppingCarts.query.filter_by(user_id=user_id).first()
+        if cart:
+            # Elimina todos los ítems del carrito basados en shopping_cart_id
+            ShoppingCartItems.query.filter_by(shopping_cart_id=cart.id).delete()
+            db.session.commit()
+            return jsonify({'message': 'Cart cleared successfully'}), 200
+        else:
+            return jsonify({'error': 'Cart not found'}), 404
+    except KeyError:
+        return jsonify({'error': "User ID not found in token"}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

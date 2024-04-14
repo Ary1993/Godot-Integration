@@ -51,9 +51,7 @@ app.config['MAIL_USERNAME'] = 'cf0aa298c0b412'
 app.config['MAIL_PASSWORD'] = '9ae6df4d345758'
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_DEFAULT_SENDER'] = "sandbox.smtp.mailtrap.io"
 mail = Mail(app)
-
 
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
