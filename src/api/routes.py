@@ -260,8 +260,8 @@ def checkout():
             customer_email=email,
             line_items=line_items,
             mode='payment',
-            success_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/success',
-            cancel_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/failed',
+            success_url='https://studious-funicular-vq6gw76v7gg3x9r6-3000.app.github.dev/success',
+            cancel_url='https://studious-funicular-vq6gw76v7gg3x9r6-3000.app.github.dev/failed',
         )
 
         return jsonify({'checkout_url': checkout_session.url})
