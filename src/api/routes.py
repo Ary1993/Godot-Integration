@@ -8,12 +8,14 @@ from api.models import db, Users, Products, Wishes, ShoppingCarts, ShoppingCartI
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
+from flask_mail import Mail, Message
 import stripe
 import os
 
 api = Blueprint('api', __name__)
 CORS(api)  # Allow CORS requests to this API
 stripe.api_key = os.getenv("stripe.api_test")
+mail = Mail()
 
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
@@ -29,11 +31,23 @@ def login():
     response_body = {}
     email = request.json.get("email", None)
     password = request.json.get("password", None)
-    # Reemplazar por lógica consultando la DB.
     user = db.session.execute(db.select(Users).where(Users.email == email, Users.password == password, Users.is_active == True)).scalar()
-    if not user: 
-        response_body["message"] = "Email o pasword incorrecto"
+    if not user:
+        response_body["message"] = "Email o password incorrecto"
         return response_body, 401
+    access_token = create_access_token(identity=user.serialize())
+    response_body['access_token'] = access_token
+    response_body['message'] = "Usuario logeado con éxito"
+    user_info = user.serialize()
+    cart = db.session.query(ShoppingCarts).filter_by(user_id=user.id).first()
+    if not cart:
+        # Si no existe un carrito, crear uno nuevo
+        cart = ShoppingCarts(user_id=user.id)
+        db.session.add(cart)
+        db.session.commit()
+    # Incluir el ID del carrito existente o nuevo en la respuesta
+    user_info['cartId'] = cart.id
+    response_body['results'] = user_info
     response_body['user'] = user.serialize()
     # agregar en el result el carrito del user y sus items
     cart = db.session.execute(db.select(ShoppingCarts).where(ShoppingCarts.user_id == user.id)).scalar()
@@ -222,35 +236,34 @@ def checkout():
     try:
         json_data = request.get_json(force=True)
         email = json_data.get('email')
-        product_ids = json_data.get('product_ids', [])
+        products = json_data.get('products', []) # Ajuste para recibir 'products'
 
-        if not email or not product_ids:
-            return jsonify({'error': 'Email and product IDs are required'}), 400
+        if not email or not products:
+            return jsonify({'error': 'Email and product details are required'}), 400
 
-        # Busca los Stripe price IDs en tu base de datos para cada producto ID recibido
         line_items = []
-        for prod_id in product_ids:
-            product = Products.query.filter_by(id=prod_id, is_active=True).first()
+        for prod in products:
+            product_id = prod.get('product_id')
+            quantity = prod.get('quantity', 1) # Asegúrate de manejar un valor predeterminado
+            product = Products.query.filter_by(id=product_id, is_active=True).first()
             if product:
                 line_items.append({
                     'price': product.stripe_key,
-                    'quantity': 1,
+                    'quantity': quantity,
                 })
 
         if not line_items:
             return jsonify({'error': 'No valid products found'}), 400
 
-        # Crea una nueva sesión de checkout con Stripe
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             customer_email=email,
             line_items=line_items,
             mode='payment',
-            success_url='https://example.com/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='https://example.com/cancel',
+            success_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/success',
+            cancel_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/failed',
         )
 
-        # Retorna la URL de la sesión para redirigir al usuario
         return jsonify({'checkout_url': checkout_session.url})
     except Exception as e:
         return jsonify({'error': str(e)}), 400
@@ -336,10 +349,20 @@ def hundle_cart(cart_id):
     if  current_user["id"] != cart.user_id:
         return jsonify({'message': 'no autorizado'}), 404
     if request.method == 'GET': 
-        # Obtener los ítems del carrito
+        # Obtener los ítems del carrito, asegurando que el producto esté cargado
         items = ShoppingCartItems.query.filter_by(shopping_cart_id=cart_id).all()
-        serialized_items = [item.serialize() for item in items]
-        # Serializar el carrito junto con los ítems
+        serialized_items = []
+        for item in items:
+            serialized_item = {
+                'id': item.id,
+                'price': item.price,
+                'product_id': item.product_id,
+                'quantity': item.quantity,
+                'shopping_cart_id': item.shopping_cart_id,
+                'product_name': item.products.name,
+                "image_url": item.products.image_url  # Accede a la imagen a través de la relación products
+            }
+            serialized_items.append(serialized_item)
         cart_data = cart.serialize()
         cart_data['items'] = serialized_items
         return jsonify(cart_data), 200
@@ -394,24 +417,24 @@ def agregar_producto():
     db.session.commit()
     return jsonify({'message': 'Producto agregado exitosamente al carrito', 'item_id': new_item.id}), 201
 
-# Ruta para borrar un ítem específico del carrito
-@api.route('/cart-items/<int:item_id>', methods=['DELETE'])
-@jwt_required()  # Requiere autenticación JWT
+@api.route('/carts/<int:cart_id>/items/<int:item_id>', methods=['DELETE'])
+@jwt_required()
 def borrar_item_carrito(cart_id, item_id):
     current_user_id = get_jwt_identity()
+    user_id = current_user_id['id']  # Extraer el ID del usuario desde el diccionario
+    print(f"Cart ID: {cart_id}, Current User ID: {current_user_id}")
+    
     cart = ShoppingCarts.query.get(cart_id)
-    if cart is None:
-        return jsonify({'message': 'Carrito no encontrado'}), 404
-
-    # Buscar el ítem en el carrito
+    print(f"Cart retrieved: {cart}")
+    if cart is None or cart.user_id != user_id:  # Usar user_id para la comparación
+        return jsonify({'message': 'Carrito no encontrado o acceso no autorizado'}), 404
+    
     item = ShoppingCartItems.query.filter_by(id=item_id, shopping_cart_id=cart_id).first()
     if item is None:
         return jsonify({'message': 'Ítem no encontrado en el carrito'}), 404
 
-    # Borrar el ítem del carrito
     db.session.delete(item)
     db.session.commit()
-    
     return jsonify({'message': 'Ítem del carrito eliminado exitosamente'}), 200
 
 
@@ -552,3 +575,93 @@ def delete_product_from_store(store_id):
     db.session.commit()
 
     return jsonify({"message": "Producto eliminado exitosamente de la tienda"}), 200
+
+
+@api.route('/subscribe', methods=['POST'])
+def subscribe():
+    email = request.json.get('email')
+    if not email:
+        return jsonify({"message": "Por favor, envía un email"}), 400
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Suscripción Exitosa</title>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                margin: 0;
+                padding: 20px;
+                background-color: #f4f4f4;
+                color: #333;
+                text-align: center;
+            }
+            .container {
+                background-color: #fff;
+                margin: auto;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                max-width: 600px;
+            }
+            h1 {
+                color: #0066cc;
+            }
+            p {
+                margin: 20px 0;
+            }
+            .btn {
+                display: inline-block;
+                background-color: #0066cc;
+                color: #ffffff;
+                padding: 10px 20px;
+                border-radius: 5px;
+                text-decoration: none;
+                font-weight: bold;
+            }
+            .btn:hover {
+                background-color: #0056b3;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Suscripción Exitosa</h1>
+            <p>¡Gracias por suscribirte a nuestro boletín! Pronto empezarás a recibir actualizaciones exclusivas y contenido de calidad directamente en tu bandeja de entrada.</p>
+            <a href="https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/" class="btn">Visitar Sitio</a>
+        </div>
+    </body>
+    </html>
+    """
+    msg = Message("Suscripción Exitosa",
+                  sender="pppmfg@gmail.com",
+                  recipients=[email])
+    msg.body = "Este es un mensaje de texto para clientes de correo que no soportan HTML."
+    msg.html = html_content  
+    mail.send(msg)
+    return jsonify({"message": "¡Suscripción exitosa!"}), 200
+
+    from flask import jsonify, request
+
+@api.route('/clear-cart', methods=['POST'])
+@jwt_required()
+def clear_cart():
+    try:
+        user_identity = get_jwt_identity()
+        user_id = user_identity['id']  # Obteniendo el ID del usuario del token JWT
+
+        # Encuentra el carrito del usuario basado en user_id
+        cart = ShoppingCarts.query.filter_by(user_id=user_id).first()
+        if cart:
+            # Elimina todos los ítems del carrito basados en shopping_cart_id
+            ShoppingCartItems.query.filter_by(shopping_cart_id=cart.id).delete()
+            db.session.commit()
+            return jsonify({'message': 'Cart cleared successfully'}), 200
+        else:
+            return jsonify({'error': 'Cart not found'}), 404
+    except KeyError:
+        return jsonify({'error': "User ID not found in token"}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

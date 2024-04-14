@@ -23,6 +23,11 @@ const getState = ({ getStore, getActions, setStore }) => {
         setStore({ cart: data.cart })
         localStorage.setItem("cart", JSON.stringify(data.cart))
       },
+      carts: (data) => {
+        setStore({ isLogin: true });
+        setStore({ carts: data.items })
+        localStorage.setItem("carts", JSON.stringify(data.items))
+      },
       logout: () => {
         setStore({
           isLogin: false,
@@ -73,7 +78,9 @@ const getState = ({ getStore, getActions, setStore }) => {
             continue; // Skip to the next wish
           }
           const dataToSend = {
+
             "product_id": wish.product_id
+
           };
           const url = process.env.BACKEND_URL + "/api/wishes";
           const options = {
@@ -92,6 +99,7 @@ const getState = ({ getStore, getActions, setStore }) => {
           // Optionally, process response data, en este caso estamos actualizando todo y con el getWishes() traemos todos los serialized       
         }
         await getActions().getWishes();
+
       },
 
       addWishes: async (newFavorite) => {
@@ -121,7 +129,6 @@ const getState = ({ getStore, getActions, setStore }) => {
             console.log("error", response.status, response.statusText)
             return
           };
-
           const data = await response.json();
           /*newWish = {
             id: data.results.id,
@@ -218,10 +225,12 @@ const getState = ({ getStore, getActions, setStore }) => {
         } else {
           setStore({ isLogin: true })
           setStore({ user: JSON.parse(localStorage.getItem("user")) })
+
         }
         if (localStorage.getItem("wishes")) {
           setStore({ wishes: JSON.parse(localStorage.getItem("wishes")) })
         }
+
         //Preguntar como el cart igual que con wishes
         //setStore({ cart: JSON.parse(localStorage.getItem("cart")) })
       },
@@ -240,6 +249,29 @@ const getState = ({ getStore, getActions, setStore }) => {
         const data = await response.json()
         setStore({ products: data.results })
         //localStorage.setItem("products", JSON.stringify(data))
+      },
+
+
+      setCart: (cartData) => {
+        setStore({ carts: cartData });  // Establece el carrito en el estado global
+        localStorage.setItem('carts', JSON.stringify(cartData));  // Opcionalmente, guarda el carrito en localStorage
+      },
+
+      removeItemFromCart: (itemId) => {
+        const store = getStore();  // Obtiene el estado actual
+        if (store.carts && store.carts.items) {
+          const updatedItems = store.carts.items.filter(item => item.id !== itemId);  // Filtra el ítem que quieres remover
+          const updatedCart = { ...store.carts, items: updatedItems };  // Crea un nuevo objeto de carrito con los ítems actualizados
+          setStore({ carts: updatedCart });  // Actualiza el estado del carrito
+          localStorage.setItem('carts', JSON.stringify(updatedCart));  // Actualiza el localStorage
+        }
+      },
+      clearCart: () => {
+        setStore({ carts: null });  // Esto establece el carrito a null, puedes ajustarlo según necesites
+        localStorage.removeItem("carts");  // Elimina el carrito del almacenamiento local
+      },
+      setCartId: (cartId) => {
+        setStore({ cartId });
       },
 
       // Use getActions to call a function within a fuction

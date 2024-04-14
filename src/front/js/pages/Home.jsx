@@ -3,6 +3,8 @@ import { Context } from "../store/appContext.js";
 import "../../styles/home.css";
 import { ProductsList } from "./ProductsList.jsx";
 import { Slider } from "./Slider.jsx";
+import { Newsletter } from "../component/Newsletter.jsx";
+import { Logos } from "./Logos.jsx";
 
 
 
@@ -15,6 +17,7 @@ export const Home = () => {
         {store.message || "Loading message from the backend (make sure your python backend is running)..."}
       </div>
       <Slider />
+      <Logos />
       <ProductsList />
       <p>
         This boilerplate comes with lots of documentation:{" "}
@@ -22,6 +25,7 @@ export const Home = () => {
           Read documentation
         </a>
       </p>
+      <Newsletter />
     </div>
   );
 };
