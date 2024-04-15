@@ -20,6 +20,7 @@ export const Slider = () => {
             <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251976/CoD4.png.jpg" alt="First slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
+
           <Link to="/product/2">
             <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251592/GTAsanandreas.png.jpg" alt="Second slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
@@ -34,6 +35,7 @@ export const Slider = () => {
           </Link>
         </Carousel.Item>
         <Carousel.Item>
+
           <Link to="/product/1">
             <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251592/GTAsanandreas.png.jpg" alt="Second slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
@@ -66,6 +68,7 @@ export const Slider = () => {
           </Link>
           <Link to="/product/">
             <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251488/assasincreed.png.jpg" alt="Second slide"
+
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
         </Carousel.Item>

@@ -6,7 +6,7 @@ import { BTNWishes } from "./BTNWishes.jsx";
 export const Navbar = () => {
 	const { store, actions } = useContext(Context)
 	return (
-		<nav className="navbar navbar-light bg-light">
+		<nav className="navbar ">
 			<div className="container">
 				<Link to="/">
 					<span className="navbar-brand mb-0 h1">React Boilerplate</span>
