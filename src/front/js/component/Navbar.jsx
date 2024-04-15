@@ -2,15 +2,20 @@ import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { Context } from "../store/appContext";
 import { BTNWishes } from "./BTNWishes.jsx";
+import logo from "../../img/logo.png";
 
 export const Navbar = () => {
 	const { store, actions } = useContext(Context)
 	return (
 		<nav className="navbar ">
 			<div className="container">
-				<Link to="/">
-					<span className="navbar-brand mb-0 h1">React Boilerplate</span>
-				</Link>
+			
+					<Link to="/" className="d-flex align-items-center">
+						<img src={logo} alt="Logo" className="navbar-brand-logo" style={{ width: '100px', height: 'auto', marginRight: '20px' }} />
+						<h3>NextLevel Keys</h3> 
+
+					</Link>
+				
 				<div className="ml-auto">
 					<Link to={store.isLogin ? "/" : "/login"}>
 						<button className="btn btn-success ms-2" onClick={store.isLogin ? actions.logout : () => { }}>
