@@ -32,6 +32,13 @@ export const Navbar = () => {
 							</button>
 						</Link>
 					)}
+					{store.isLogin && (
+						<Link to="/profile">
+							<button className="btn btn-info ms-2">
+								Profile
+							</button>
+						</Link>
+					)}
 				</div>
 
 			</div>
