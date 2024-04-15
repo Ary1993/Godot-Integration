@@ -35,12 +35,10 @@ def login():
     if not user:
         response_body["message"] = "Email o password incorrecto"
         return response_body, 401
-    
     access_token = create_access_token(identity=user.serialize())
     response_body['access_token'] = access_token
     response_body['message'] = "Usuario logeado con éxito"
     user_info = user.serialize()
-
     # Comprobar si existe un carrito para el usuario
     cart = db.session.query(ShoppingCarts).filter_by(user_id=user.id).first()
     if not cart:
@@ -48,7 +46,6 @@ def login():
         cart = ShoppingCarts(user_id=user.id)
         db.session.add(cart)
         db.session.commit()
-
     # Incluir el ID del carrito existente o nuevo en la respuesta
     user_info['cartId'] = cart.id
     response_body['results'] = user_info
@@ -349,33 +346,59 @@ def get_cart():
 @api.route('/cart-items', methods=['POST'])
 @jwt_required()  # Requiere autenticación JWT
 def agregar_producto():
+    # Obtener identidad del usuario autenticado
     current_user = get_jwt_identity()
     user_id = current_user["id"]
-    #cart = ShoppingCarts.filter(user_id == current_user["id"])
-    cart = db.session.execute(db.select(ShoppingCarts).where(ShoppingCarts.user_id == user_id)).scalar()
+
+    # Obtener o crear el carrito para el usuario
+    cart = db.session.execute(
+        db.select(ShoppingCarts).where(ShoppingCarts.user_id == user_id)
+    ).scalar()
+
     if cart is None:
         cart = ShoppingCarts(user_id=user_id)
         db.session.add(cart)
         db.session.commit()
-    #if cart.user_id != current_user_id:
-     #   return jsonify({'message': 'No tienes permiso para realizar esta acción'}), 403
+        print(f"Nuevo carrito creado para el usuario {user_id} con ID: {cart.id}")
+    else:
+        print(f"Carrito encontrado para el usuario {user_id} con ID: {cart.id}")
+
+    # Obtener datos del producto desde el request
     data = request.json
     product_id = data.get('product_id')
     quantity = data.get('quantity')
-    product = db.session.execute(db.select(Products).where(Products.id == product_id)).scalar()
+
     if not all([product_id, quantity]):
         return jsonify({'message': 'Se requieren los campos product_id y quantity'}), 400
+
+    # Verificar que el producto exista
+    product = db.session.execute(
+        db.select(Products).where(Products.id == product_id)
+    ).scalar()
+
     if product is None:
-        return jsonify({'message': 'el producto no existe'}), 400
-    price = product.price
-    # Crear un nuevo item en el carrito
-    new_item = ShoppingCartItems(quantity=quantity,
-                                 price=price,
-                                 shopping_cart_id=cart.id,
-                                 product_id=product_id)
+        return jsonify({'message': 'El producto no existe'}), 400
+
+    print(f"Producto encontrado con ID: {product.id} y precio {product.price}")
+
+    # Crear un nuevo ítem en el carrito
+    new_item = ShoppingCartItems(
+        quantity=quantity,
+        price=product.price,
+        shopping_cart_id=cart.id,
+        product_id=product.id
+    )
     db.session.add(new_item)
     db.session.commit()
-    return jsonify({'message': 'Producto agregado exitosamente al carrito', 'item_id': new_item.id}), 201
+    
+    return jsonify({
+        'message': 'Producto agregado exitosamente al carrito',
+        'item_id': new_item.id,
+        'cart_id': cart.id,
+        'product_id': product.id,
+        'quantity': quantity,
+        'price': product.price
+    }), 201
 
 @api.route('/carts/<int:cart_id>/items/<int:item_id>', methods=['DELETE'])
 @jwt_required()
