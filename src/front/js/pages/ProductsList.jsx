@@ -43,8 +43,8 @@ export const ProductsList = () => {
 
     return (
         <div className="container">
-            <AlertComponent show={showAlert} message={alertMessage} onClose={() => setShowAlert(false)} />
             <h1 className="mb-4">Products List</h1>
+            <AlertComponent show={showAlert} message={alertMessage} onClose={() => setShowAlert(false)} />
             <div className="row row-cols-1 row-cols-md-3 row-cols-xl-5 g-2">
                 {!store.products ? <h2>Loading...</h2> :
                     store.products.map((product) => (

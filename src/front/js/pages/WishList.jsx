@@ -21,10 +21,10 @@ export const WishList = () => {
             <div className="container">
                 <h1 className="mb-4">Wish List</h1>
                 {!store.wishes ? <h2>Loading...</h2> :
-                    <div className="card-columns">
+                    <div className="card-columns d-flex aling-item-center" >
                         {store.wishes.map((wish) => (
                             <div key={wish.id} className="card">
-                                <img src={wish.image_url} className="card-img-top img-thumbnail" alt={wish.full_name} />
+                                <img src={wish.image_url} className="card-img-top img-thumbnail" alt={wish.full_name} style={{ width: '220px', height: '370px', margin: '20px' }}/>
                                 <div className="card-body">
                                     <h5 className="card-title">{wish.name}</h5>
                                 </div>
