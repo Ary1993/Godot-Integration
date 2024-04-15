@@ -9,7 +9,7 @@ export const ProductDetails = () => {
     const { store, actions } = useContext(Context);
     const params = useParams();
 
-    const details = store.products.find(item => item.id == 1);
+    const details = store.products.find(item => item.id == params.idProduct);
     
     const handleOnClick = async () => {
         const dataToSend = {
@@ -20,7 +20,7 @@ export const ProductDetails = () => {
     }
 
 
-    const details = store.products.find(item => item.id === parseInt(params.idProduct));
+    //const details = store.products.find(item => item.id === parseInt(params.idProduct));
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     if (!details) {
