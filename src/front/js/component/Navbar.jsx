@@ -6,7 +6,7 @@ import { BTNWishes } from "./BTNWishes.jsx";
 export const Navbar = () => {
 	const { store, actions } = useContext(Context)
 	return (
-		<nav className="navbar navbar-light bg-light">
+		<nav className="navbar ">
 			<div className="container">
 				<Link to="/">
 					<span className="navbar-brand mb-0 h1">React Boilerplate</span>
@@ -29,6 +29,13 @@ export const Navbar = () => {
 						<Link to="/cart">
 							<button className="btn btn-danger ms-2">
 								Carrito
+							</button>
+						</Link>
+					)}
+					{store.isLogin && (
+						<Link to="/profile">
+							<button className="btn btn-info ms-2">
+								Profile
 							</button>
 						</Link>
 					)}

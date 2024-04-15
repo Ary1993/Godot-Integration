@@ -14,7 +14,7 @@ export const Logos = () => {
     }
 
     return (
-        <nav className="navbar navbar-expand-lg bg-body-tertiary mt-4" >
+        <nav className="navbar navbar-expand-lg  mt-4" >
             <div className="container-fluid d-flex justify-content-center">
                 <div className="div">
                     {repeatedIcons.map((icon, index) => (
