@@ -8,6 +8,11 @@ export const WishList = () => {
     //const navigate = useNavigate();
 
     const deleteWish = (wish) => {
+        console.log(store.products[wish.product_id - 1].image_url);
+        //actions.deleteContact(contact.id); // Assuming you have a deleteContact action.
+    };
+    const imageWish = (wish) => {
+        return toString(store.products[wish.product_id - 1].image_url);
         //actions.deleteContact(contact.id); // Assuming you have a deleteContact action.
     };
 
@@ -19,12 +24,12 @@ export const WishList = () => {
                     <div className="card-columns">
                         {store.wishes.map((wish) => (
                             <div key={wish.id} className="card">
-                                <img src={wish.image} className="card-img-top" alt={wish.full_name} />
+                                <img src={wish.image_url} className="card-img-top img-thumbnail" alt={wish.full_name} />
                                 <div className="card-body">
                                     <h5 className="card-title">{wish.name}</h5>
                                 </div>
                                 <div className="card-footer">
-                                    <button onClick={() => deleteWish(wish)} className="btn btn-danger mr-2">
+                                    <button onClick={() => actions.removeWishes(wish.id, wish.product_id)} className="btn btn-danger mr-2">
                                         <i className="fas fa-trash"></i>
                                     </button>
                                 </div>

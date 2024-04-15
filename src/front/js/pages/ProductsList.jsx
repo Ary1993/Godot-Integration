@@ -1,6 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Link } from "react-router-dom";
 import { Context } from '../store/appContext';
+
 import AlertComponent from "../component/Alert.jsx";
 
 
@@ -39,6 +40,7 @@ export const ProductsList = () => {
                 setShowAlert(true);
             });
     }
+
     return (
         <div className="container">
             <AlertComponent show={showAlert} message={alertMessage} onClose={() => setShowAlert(false)} />
@@ -62,9 +64,10 @@ export const ProductsList = () => {
                                             <i className="fas fa-shopping-cart"></i>
                                         </button>
                                     )}
-                                    {/* <button onClick={() => actions.toggleFavorite(product)} className="btn btn-outline-warning my-auto">
+                                    <button onClick={() => actions.toggleFavorite(product)} className="btn btn-outline-warning my-auto">
                                         <i className={`${actions.getHeartClass(product)} my-auto`}></i>
-                                    </button> */}
+                                    </button>
+
                                 </div>
                             </div>
                         </div>

@@ -9,6 +9,17 @@ export const ProductDetails = () => {
     const { store, actions } = useContext(Context);
     const params = useParams();
 
+    const details = store.products.find(item => item.id == 1);
+    
+    const handleOnClick = async () => {
+        const dataToSend = {
+            email: email,
+            password: password
+        }
+        await actions.handleLogin(dataToSend.email, dataToSend.password);
+    }
+
+
     const details = store.products.find(item => item.id === parseInt(params.idProduct));
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
@@ -70,9 +81,18 @@ export const ProductDetails = () => {
                     <div className="card border-dark my-3 mx-2 text-bg">
                         <div className="card-body">
                             <h5 className="card-title">Details</h5>
-                            <p className="card-text">Price: {details.name}</p>
+                            <p className="card-text">Name: {details.name}</p>
                             <p className="card-text">Price: ${details.price}</p>
                             <p className="card-text">Description: {details.description}</p>
+
+                            {/* todos los parametros que quiera los pongo aqui */}
+                            <Button variant="secondary" >
+                                <i className="fas fa-eye"></i>
+                            </Button>{' '}
+                            <button onClick={() => actions.toggleFavorite(details)} className="btn btn-outline-warning my-auto">
+                                <i className={`${actions.getHeartClass(details)} my-auto`}></i>
+                            </button>
+
                         </div>
                     </div>
                 </div>
