@@ -39,7 +39,6 @@ def login():
     response_body['access_token'] = access_token
     response_body['message'] = "Usuario logeado con éxito"
     user_info = user.serialize()
-    # Comprobar si existe un carrito para el usuario
     cart = db.session.query(ShoppingCarts).filter_by(user_id=user.id).first()
     if not cart:
         # Si no existe un carrito, crear uno nuevo
@@ -49,10 +48,54 @@ def login():
     # Incluir el ID del carrito existente o nuevo en la respuesta
     user_info['cartId'] = cart.id
     response_body['results'] = user_info
-
+    response_body['user'] = user.serialize()
+    # agregar en el result el carrito del user y sus items
+    cart = db.session.execute(db.select(ShoppingCarts).where(ShoppingCarts.user_id == user.id)).scalar()
+    cart_items = []
+    if cart:
+        # Realizar la consulta para obtener los ítems del carrito y los nombres de los productos asociados
+        items = db.session.query(ShoppingCartItems).\
+                                 join(Products, Products.id == ShoppingCartItems.product_id).\
+                                 add_columns(Products.name.label("product_name")).\
+                                 filter(ShoppingCartItems.shopping_cart_id == cart.id).all()
+        # Serializar los ítems del carrito incluyendo el nombre del producto
+        serialized_items = [
+            {
+                "id": item.ShoppingCartItems.id,  # Acceder a los atributos del modelo ShoppingCartItems
+                "name": item.product_name,  # Acceder al nombre del producto directamente
+                "price": item.ShoppingCartItems.price,
+                "quantity": item.ShoppingCartItems.quantity
+            } for item in items
+        ]
+        response_body['cart'] =  {
+                    "id": cart.id if cart else None,
+                    "user_id": cart.user_id if cart else None,
+                    "items": serialized_items
+                }
+    else:
+        response_body['cart'] = {}
+    # agregar en el result los wishes del user
+    wishes = db.session.query(Wishes, Products.name.label("product_name")).\
+        join(Products, Products.id == Wishes.product_id).\
+        filter(Wishes.user_id == user.id).all()
+    if wishes:
+        # Serializar los deseos incluyendo el nombre del producto
+        wishes_data = [
+            {
+                "id": wish.id,  # Acceder directamente a los atributos del modelo Wishes
+                "name": product_name,  # 'product_name' es el nombre del producto, obtenido directamente de la consulta
+                "product_id": wish.product_id,
+            } for wish, product_name in wishes
+        ]
+        # Agrega los deseos serializados al cuerpo de la respuesta
+        response_body['wishes'] = wishes_data
+    else:
+        response_body['wishes'] = []
+    access_token = create_access_token(identity=user.serialize())  # Lo que el back quiere agregar en el token
+    response_body['access_token'] = access_token
+    response_body['message'] = "Usuario logeado con éxito"
     return response_body, 200
-
-
+    
 # Protect a route with jwt_required, which will kick out requests
 # without a valid JWT present.
 @api.route("/protected", methods=["GET"])
@@ -159,6 +202,7 @@ def add_to_wished():
         db.session.add(wish)
         db.session.commit()
         response_body["message"]= "Responde el POST"
+        response_body["results"] = wish.serialize()
         return response_body
 
 @api.route('/wishes/<int:wish_id>', methods=['DELETE'])
@@ -216,8 +260,8 @@ def checkout():
             customer_email=email,
             line_items=line_items,
             mode='payment',
-            success_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/success',
-            cancel_url='https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/failed',
+            success_url='https://studious-funicular-vq6gw76v7gg3x9r6-3000.app.github.dev/success',
+            cancel_url='https://studious-funicular-vq6gw76v7gg3x9r6-3000.app.github.dev/failed',
         )
 
         return jsonify({'checkout_url': checkout_session.url})
@@ -339,8 +383,7 @@ def get_cart():
     #cart = ShoppingCarts.filter(user_id == current_user["id"])
     cart = db.session.execute(db.select(ShoppingCarts).where(ShoppingCarts.user_id == user_id)).scalar()
     if cart is None:
-        pass
-        #haacer el serialize de todos los items 
+        return jsonify({'message': 'no tienes items en el carrito'}), 400
 
 # Ruta para agregar un producto a un carrito de compras
 @api.route('/cart-items', methods=['POST'])

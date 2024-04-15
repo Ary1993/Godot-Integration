@@ -15,7 +15,7 @@ import { Signup } from "./pages/Signup.jsx";
 import { Profile } from "./pages/profile.jsx";
 import { ShoppingCart } from "./pages/ShoppingCart.jsx";
 import { WishList } from "./pages/WishList.jsx";
-import "bootswatch/dist/lux/bootstrap.min.css";
+import "bootswatch/dist/morph/bootstrap.min.css";
 import { ProductDetails } from "./pages/ProductDetails.jsx";
 import { Success } from './pages/Success.jsx';
 import { Failed } from './pages/Failed.jsx';

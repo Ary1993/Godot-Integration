@@ -6,30 +6,16 @@ export const Login = () => {
     const { store, actions } = useContext(Context)
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+
+
     const handleOnClick = async () => {
         const dataToSend = {
             email: email,
             password: password
         }
-        const url = process.env.BACKEND_URL + "/api/login"
-        const options = {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(dataToSend)
-        }
-        const response = await fetch(url, options);
-        if (!response.ok) {
-            console.log("error", response.status, response.statusText);
-            return
-        }
-        const data = await response.json()
-        actions.login(data);
-        localStorage.setItem("token", data.access_token)
-        // Now update wishes
-        await actions.updateWishes();
+        await actions.handleLogin(dataToSend.email,dataToSend.password);
     }
+
 
     return (
         store.isLogin ? <Navigate to="/profile" /> :

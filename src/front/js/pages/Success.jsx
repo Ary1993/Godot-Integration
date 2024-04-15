@@ -11,7 +11,7 @@ export const Success = () => {
         const clearUserCart = async () => {
             const token = localStorage.getItem('token'); // Asegúrate de manejar la autenticación según como la hayas implementado
             try {
-                const response = await fetch('https://friendly-space-enigma-r9v4r559xvqhprg6-3001.app.github.dev/api/clear-cart', {
+                const response = await fetch(process.env.BACKEND_URL+'/api/clear-cart', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

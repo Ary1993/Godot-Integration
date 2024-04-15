@@ -13,7 +13,7 @@ export const ShoppingCart = () => {
                 return;
             }
             const cartId = store.user.cartId;
-            const url = `https://friendly-space-enigma-r9v4r559xvqhprg6-3001.app.github.dev/api/carts/${cartId}`;
+            const url = process.env.BACKEND_URL + "/api/carts/" + cartId;
 
             try {
                 const response = await fetch(url, {
@@ -42,7 +42,7 @@ export const ShoppingCart = () => {
 
     function handleDelete(cartId, itemId) {
         const token = localStorage.getItem('token');
-        fetch(`https://friendly-space-enigma-r9v4r559xvqhprg6-3001.app.github.dev/api/carts/${cartId}/items/${itemId}`, {
+        fetch(process.env.BACKEND_URL + "/api/carts/" + cartId  + "/items/" +  itemId , {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -86,7 +86,7 @@ export const ShoppingCart = () => {
             };
 
             setIsLoading(true);
-            fetch('https://friendly-space-enigma-r9v4r559xvqhprg6-3001.app.github.dev/api/checkout', {
+            fetch(process.env.BACKEND_URL + "/api/checkout", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -124,7 +124,7 @@ export const ShoppingCart = () => {
     };
 
     return (
-        <section className="vh-100" style={{ backgroundColor: "#92AC86" }}>
+        <section className="vh-100" >
             <div className="container h-100">
                 <div className="row d-flex justify-content-center align-items-center h-100">
                     <div className="col">

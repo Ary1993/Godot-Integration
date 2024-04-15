@@ -4,13 +4,14 @@ import { Context } from "../store/appContext";
 import Button from 'react-bootstrap/Button';
 import AlertComponent from "../component/Alert.jsx";
 
+
 export const ProductDetails = () => {
     const { store, actions } = useContext(Context);
     const params = useParams();
+
     const details = store.products.find(item => item.id === parseInt(params.idProduct));
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
-
     if (!details) {
         return <div className="container">Loading...</div>;
     }
@@ -79,3 +80,4 @@ export const ProductDetails = () => {
         </div>
     );
 }
+

@@ -21,6 +21,10 @@ typing-extensions = "*"
 flask-jwt-extended = "*"
 stripe = "*"
 flask-mail = "*"
+flask-restful = "*"
+requests = "*"
+flask-mailman = "*"
+dbapi = "*"
 
 [requires]
 python_version = "3.10"
