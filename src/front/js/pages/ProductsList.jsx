@@ -1,11 +1,16 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link } from "react-router-dom";
 import { Context } from '../store/appContext';
+import AlertComponent from "../component/Alert.jsx";
+
 export const ProductsList = () => {
     const { store, actions } = useContext(Context);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+
     function handlePOST(product) {
         const token = localStorage.getItem('token');
-        fetch(`https://friendly-space-enigma-r9v4r559xvqhprg6-3001.app.github.dev/api/cart-items`, {
+        fetch(process.env.BACKEND_URL + "/api/cart-items", {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -24,14 +29,18 @@ export const ProductsList = () => {
             })
             .then(data => {
                 console.log('Item added:', data);
-                // Actualizar el carrito en el estado global si es necesario
+                setAlertMessage('Item añadido al carrito');
+                setShowAlert(true);
             })
             .catch(error => {
                 console.error('Error:', error);
+                setAlertMessage('Error al añadir el item al carrito');
+                setShowAlert(true);
             });
     }
     return (
         <div className="container">
+            <AlertComponent show={showAlert} message={alertMessage} onClose={() => setShowAlert(false)} />
             <h1 className="mb-4">Products List</h1>
             <div className="row row-cols-1 row-cols-md-3 row-cols-xl-5 g-2">
                 {!store.products ? <h2>Loading...</h2> :
