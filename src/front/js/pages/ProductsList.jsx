@@ -1,33 +1,9 @@
 import React, { useContext } from 'react';
 import { Link } from "react-router-dom";
 import { Context } from '../store/appContext';
-
-
-
 export const ProductsList = () => {
     const { store, actions } = useContext(Context);
-    // Function to toggle the favorite status of a product
-    const toggleFavorite = (product) => {
-        console.log(store.isLogin);
-
-        const isFavorite = store.wishes.filter(wish => wish.product_id === product.id);
-        console.log(isFavorite);
-        if (isFavorite.length === 0) {
-            console.log("Igual a cero");
-            actions.addWishes(product);
-        } else {
-            console.log("Distinto que cero");
-            actions.removeWishes(isFavorite[0].id, product.id); // Assuming removeWishes accepts the product and the new array of wishes
-        }
-
-    }
-
-
-    // Function to return the appropriate class for the heart icon
-    const getHeartClass = (product) => {
-        return store.wishes.some(wish => wish.product_id == product.id) ? "fas fa-heart text-warning" : "far fa-heart";
-    }
-
+    
     return (
         <div className="container">
             <h1 className="mb-4">Products List</h1>
@@ -43,11 +19,16 @@ export const ProductsList = () => {
                                         $ {product.price}.00
                                     </p>
                                 </div>
-                                <div className="d-flex justify-content-between">
-                                    <Link className="btn btn-secondary" to={"/product/" + product.id}>Details</Link>
-                                    <span onClick={() => toggleFavorite(product)} className="btn btn-outline-warning">
-                                        <i className={getHeartClass(product)}></i>
-                                    </span>
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <Link className="btn btn-secondary my-auto" to={"/product/" + product.id}><i className="fas fa-eye"></i></Link>
+                                    {store.isLogin && (
+                                        <button className="btn btn-primary my-auto" onClick={() => handlePOST(product)}>
+                                            <i className="fas fa-shopping-cart"></i>
+                                        </button>
+                                    )}
+                                    <button onClick={() => actions.toggleFavorite(product)} className="btn btn-outline-warning my-auto">
+                                        <i className={`${actions.getHeartClass(product)} my-auto`}></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -56,5 +37,4 @@ export const ProductsList = () => {
             </div>
         </div>
     );
-
-}
+};

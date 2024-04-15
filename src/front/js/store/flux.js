@@ -7,8 +7,9 @@ const getState = ({ getStore, getActions, setStore }) => {
       isLogin: false,
       user: null,
       carts: null,
-      products: null,
-      wishes: []
+      products: [],
+      wishes: [],
+      details: [],
     },
     actions: {
       login: async (data) => {
@@ -36,7 +37,7 @@ const getState = ({ getStore, getActions, setStore }) => {
         });
         localStorage.clear();
       },
-      handleLogin: async (email,password) => {
+      handleLogin: async (email, password) => {
         const dataToSend = {
           email: email,
           password: password
@@ -100,13 +101,31 @@ const getState = ({ getStore, getActions, setStore }) => {
 
       },
 
+      // Function to toggle the favorite status of a product
+      toggleFavorite: async (product) => {
+
+        const isFavorite = getStore().wishes.filter(wish => wish.product_id === product.id);
+        console.log(isFavorite);
+        if (isFavorite.length === 0) {
+          console.log("Igual a cero");
+          await getActions().addWishes(product);
+        } else {
+          console.log("Distinto que cero");
+          await getActions().removeWishes(isFavorite[0].id, product.id); // Assuming removeWishes accepts the product and the new array of wishes
+        }
+      },
+      // Function to return the appropriate class for the heart icon
+      getHeartClass: (product) => {
+        return getStore().wishes.some(wish => wish.product_id == product.id) ? "fas fa-heart text-warning" : "far fa-heart";
+      },
       addWishes: async (newFavorite) => {
         const isUserLoggedIn = getStore().isLogin;
         // Check if the wish is already in the local store to avoid duplicates
         let newWish = {
           id: null,
           product_id: newFavorite.id,
-          name: newFavorite.name
+          name: newFavorite.name,
+          image_url: newFavorite.image_url
         };
         if (isUserLoggedIn) {
           //If User is logged Update db post wishes 
@@ -206,15 +225,17 @@ const getState = ({ getStore, getActions, setStore }) => {
           let wish = {
             id: row[0].id,
             product_id: row[0].product_id,
-            name: row[1].name
+            name: row[1].name,
+            image_url: row[1].image_url,
           };
           result.push(wish);
         }
         setStore({ wishes: result })
         localStorage.setItem("wishes", JSON.stringify(result))
       },
-
+      
       verifyLogin: () => {
+        console.log("renderiza");
         // Verify Loggin : si el tokern existe en el local storage, quiere decir que esta logeado   
         if (!localStorage.getItem("token")) {
           if (localStorage.getItem("user")) {
