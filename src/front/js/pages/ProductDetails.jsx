@@ -86,9 +86,6 @@ export const ProductDetails = () => {
                             <p className="card-text">Description: {details.description}</p>
 
                             {/* todos los parametros que quiera los pongo aqui */}
-                            <Button variant="secondary" >
-                                <i className="fas fa-eye"></i>
-                            </Button>{' '}
                             <button onClick={() => actions.toggleFavorite(details)} className="btn btn-outline-warning my-auto">
                                 <i className={`${actions.getHeartClass(details)} my-auto`}></i>
                             </button>

@@ -28,7 +28,7 @@ class Products(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
     price = db.Column(db.Float, unique=False, nullable=False)
-    description = db.Column(db.String(120), unique=True, nullable=False)
+    description = db.Column(db.String(1000), unique=True, nullable=False)
     image_url = db.Column(db.String(1000), unique=True, nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
     stripe_key = db.Column(db.String(120), unique=True, nullable=False)
