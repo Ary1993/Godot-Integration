@@ -656,7 +656,7 @@ def subscribe():
         <div class="container">
             <h1>Suscripción Exitosa</h1>
             <p>¡Gracias por suscribirte a nuestro boletín! Pronto empezarás a recibir actualizaciones exclusivas y contenido de calidad directamente en tu bandeja de entrada.</p>
-            <a href="https://friendly-space-enigma-r9v4r559xvqhprg6-3000.app.github.dev/" class="btn">Visitar Sitio</a>
+            <a href="https://sample-service-name-ak1a.onrender.com/" class="btn">Visitar Sitio</a>
         </div>
     </body>
     </html>
@@ -669,7 +669,7 @@ def subscribe():
     mail.send(msg)
     return jsonify({"message": "¡Suscripción exitosa!"}), 200
 
-    from flask import jsonify, request
+
 
 @api.route('/clear-cart', methods=['POST'])
 @jwt_required()
