@@ -73,7 +73,11 @@ export const ProductDetails = () => {
                             <p className='card-text'>
                                 $ {details.price}.00
                             </p>
-                            <Button variant="primary" onClick={() => handleAddToCart(details)}>Add to Cart</Button>{' '}
+                                {store.isLogin && (   
+                                     <button className="btn btn-primary my-auto" onClick={() => handleAddToCart(details)}>
+                                     Añadir en el carrito
+                                     </button>
+                                )}
                         </div>
                     </div>
                 </div>
@@ -97,4 +101,3 @@ export const ProductDetails = () => {
         </div>
     );
 }
-
