@@ -196,8 +196,6 @@ const getState = ({ getStore, getActions, setStore }) => {
         }
       },
       getWishes: async () => {
-
-        // aqui se obtiene los wishes
         const url = process.env.BACKEND_URL + "/api/wishes"
         const options = {
           method: "GET",
@@ -208,30 +206,31 @@ const getState = ({ getStore, getActions, setStore }) => {
         };
         console.log(url);
         console.log(options);
-        const response = await fetch(url, options)
+        const response = await fetch(url, options);
         if (!response.ok) {
-          console.log("Error en el fetch", response.status, response.statusText)
-          return response.status
+          console.log("Error en el fetch", response.status, response.statusText);
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json()
-        /*let newWish = {
-          id: null,
-          product_id: newFavorite.id,
-          name: newFavorite.name
-        };*/
-        //console.log(data)
+        const data = await response.json();
+        console.log(data); // Verificar la estructura de los datos
         let result = [];
-        for (let row of data.results) {
-          let wish = {
-            id: row[0].id,
-            product_id: row[0].product_id,
-            name: row[1].name,
-            image_url: row[1].image_url,
-          };
-          result.push(wish);
+        if (data && data.results) {
+          for (let item of data.results) {
+            if (item && item.product) {
+              let wish = {
+                id: item.wish_id, // id del deseo
+                product_id: item.product.id, // id del producto
+                name: item.product.name, // nombre del producto
+                image_url: item.product.image_url, // URL de la imagen del producto
+              };
+              result.push(wish);
+            }
+          }
+        } else {
+          console.log("No se encontraron deseos");
         }
-        setStore({ wishes: result })
-        localStorage.setItem("wishes", JSON.stringify(result))
+        setStore({ wishes: result });
+        localStorage.setItem("wishes", JSON.stringify(result));
       },
       
       verifyLogin: () => {

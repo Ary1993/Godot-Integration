@@ -75,23 +75,25 @@ def login():
     else:
         response_body['cart'] = {}
     # agregar en el result los wishes del user
-    wishes = db.session.query(Wishes, Products.name.label("product_name")).\
+    wishes = db.session.query(Wishes, Products.name.label("product_name"), Products.image_url.label("image_url")).\
         join(Products, Products.id == Wishes.product_id).\
         filter(Wishes.user_id == user.id).all()
     if wishes:
-        # Serializar los deseos incluyendo el nombre del producto
+        # Serializar los deseos incluyendo el nombre del producto y la URL de la imagen
         wishes_data = [
             {
                 "id": wish.id,  # Acceder directamente a los atributos del modelo Wishes
                 "name": product_name,  # 'product_name' es el nombre del producto, obtenido directamente de la consulta
                 "product_id": wish.product_id,
-            } for wish, product_name in wishes
+                "image_url": image_url  # 'image_url' es la URL de la imagen del producto
+            } for wish, product_name, image_url in wishes
         ]
         # Agrega los deseos serializados al cuerpo de la respuesta
         response_body['wishes'] = wishes_data
     else:
         response_body['wishes'] = []
-    access_token = create_access_token(identity=user.serialize())  # Lo que el back quiere agregar en el token
+    # Crear un token de acceso utilizando la información serializada del usuario
+    access_token = create_access_token(identity=user.serialize())
     response_body['access_token'] = access_token
     response_body['message'] = "Usuario logeado con éxito"
     return response_body, 200
@@ -181,29 +183,36 @@ def add_to_wished():
     current_user = get_jwt_identity()
     if request.method == 'GET':
         if current_user["is_admin"]:
-            wishes = db.session.execute(db.select(Wishes)).scalars()  # de donde va a sacar el resultado
-            response_body['results'] = [row.serialize() for row in wishes]  # el resultado que va a mostrar en forma de lista
+            wishes = db.session.execute(db.select(Wishes)).scalars()
+            response_body['results'] = [row.serialize() for row in wishes]
             response_body['message'] = 'Success'
             return response_body, 200
-        #hacer el user comun
-        #wishes = db.session.execute(db.select(Wishes, Users, Products)).where(Wishes.user_id==current_user["id"]).join(Users, Users.id==Wishes.users_id, isouter=True).all()
         wishes = db.session.query(Wishes, Users, Products).\
                             join(Users, Users.id==Wishes.user_id, isouter=True).\
                             join(Products, Products.id==Wishes.product_id, isouter=True).\
                             where(Wishes.user_id==current_user["id"]).all()
-        print (wishes)
-        response_body['results'] = [[row[0].serialize(), row[2].serialize()] for row in wishes]  # el resultado que va a mostrar en forma de lista
-        response_body['message'] = 'Success User'    
-        return response_body
+        response_body['results'] = [{
+            "wish_id": wish.id,
+            "user_id": wish.user_id,
+            "product": {
+                "id": product.id,
+                "name": product.name,
+                "price": product.price,
+                "description": product.description,
+                "image_url": product.image_url
+            }
+        } for wish, user, product in wishes]
+        response_body['message'] = 'Success User'
+        return response_body, 200
     if request.method == 'POST':
         data = request.json
         user_id = current_user["id"]
-        wish = Wishes(user_id = user_id, product_id = data["product_id"])
+        wish = Wishes(user_id=user_id, product_id=data["product_id"])
         db.session.add(wish)
         db.session.commit()
-        response_body["message"]= "Responde el POST"
+        response_body["message"] = "Responde el POST"
         response_body["results"] = wish.serialize()
-        return response_body
+        return response_body, 201
 
 @api.route('/wishes/<int:wish_id>', methods=['DELETE'])
 @jwt_required()
@@ -260,8 +269,8 @@ def checkout():
             customer_email=email,
             line_items=line_items,
             mode='payment',
-            success_url='https://effective-space-journey-4v45jrq7v6p3759v-3000.app.github.dev/success',
-            cancel_url='https://effective-space-journey-4v45jrq7v6p3759v-3000.app.github.dev/failed',
+            success_url='https://sample-service-name-ak1a.onrender.com/success',
+            cancel_url='https://sample-service-name-ak1a.onrender.com/failed',
         )
 
         return jsonify({'checkout_url': checkout_session.url})
