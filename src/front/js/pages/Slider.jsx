@@ -17,58 +17,58 @@ export const Slider = () => {
         }} />
       <Carousel>
         <Carousel.Item>
-          <Link to="/product/2">
-            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251976/CoD4.png.jpg" alt="First slide"
-              style={{ width: '220px', height: '370px', margin: '20px' }} />
-          </Link>
-
-          <Link to="/product/2">
-            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251592/GTAsanandreas.png.jpg" alt="Second slide"
-              style={{ width: '220px', height: '370px', margin: '20px' }} />
-          </Link>
-          <Link to="/product/2">
-            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251552/GOW.png.jpg" alt="Sixth slide"
-              style={{ width: '220px', height: '370px', margin: '20px' }} />
-          </Link>
-          <Link to="/product/">
-            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251965/Halo.png.jpg" alt="Third slide"
-              style={{ width: '220px', height: '370px', margin: '20px' }} />
-          </Link>
-        </Carousel.Item>
-        <Carousel.Item>
-
           <Link to="/product/1">
-            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251592/GTAsanandreas.png.jpg" alt="Second slide"
+            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_corte/v1712251976/CoD4.png.jpg" alt="First slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
-          <Link to="/product/">
-            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712255901/yugioh.jpg" alt="Third slide"
+
+          <Link to="/product/2">
+            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_corte/v1713271627/fjtm6dgty9vustskkvhh.jpg" alt="Second slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
-          <Link to="/product/">
-            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251488/assasincreed.png.jpg" alt="Fourth slide"
+          <Link to="/product/3">
+            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_corte/v1712251552/GOW.png.jpg" alt="Sixth slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
-          <Link to="/product/">
-            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251528/residentevil3.png.jpg" alt="Fourth slide"
+          <Link to="/product/4">
+            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_corte/v1713271542/o5werkz6ppjhqtuzbucx.jpg" alt="Third slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
         </Carousel.Item>
         <Carousel.Item>
-          <Link to="/product/">
-            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251564/yakuza.png.jpg" alt="Fifth slide"
+
+          <Link to="/product/2">
+            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_corte/v1713271627/fjtm6dgty9vustskkvhh.jpg" alt="Second slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
-          <Link to="/product/">
-            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251577/DMC.png.jpg" alt="Sixth slide"
+          <Link to="/product/5">
+            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_corte/v1712255901/yugioh.jpg" alt="Third slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
-          <Link to="/product/">
-            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251604/halflife.png.jpg" alt="Sixth slide"
+          <Link to="/product/9">
+            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_corte/v1712251488/assasincreed.png.jpg" alt="Fourth slide"
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>
-          <Link to="/product/">
-            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_crop/v1712251488/assasincreed.png.jpg" alt="Second slide"
+          <Link to="/product/8">
+            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_corte/v1712251528/residentevil3.png.jpg" alt="Fourth slide"
+              style={{ width: '220px', height: '370px', margin: '20px' }} />
+          </Link>
+        </Carousel.Item>
+        <Carousel.Item>
+          <Link to="/product/7">
+            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_corte/v1712251564/yakuza.png.jpg" alt="Fifth slide"
+              style={{ width: '220px', height: '370px', margin: '20px' }} />
+          </Link>
+          <Link to="/product/11">
+            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_corte/v1712251577/DMC.png.jpg" alt="Sixth slide"
+              style={{ width: '220px', height: '370px', margin: '20px' }} />
+          </Link>
+          <Link to="/product/6">
+            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_corte/v1712251604/halflife.png.jpg" alt="Sixth slide"
+              style={{ width: '220px', height: '370px', margin: '20px' }} />
+          </Link>
+          <Link to="/product/9">
+            <img src="https://res.cloudinary.com/dbo3rxwzc/image/upload/t_corte/v1712251488/assasincreed.png.jpg" alt="Second slide"
 
               style={{ width: '220px', height: '370px', margin: '20px' }} />
           </Link>

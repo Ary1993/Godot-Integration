@@ -12,7 +12,7 @@ export const Navbar = () => {
 			
 					<Link to="/" className="d-flex align-items-center">
 						<img src={logo} alt="Logo" className="navbar-brand-logo" style={{ width: '100px', height: 'auto', marginRight: '20px' }} />
-						<h3>NextLevel Keys</h3> 
+						<h2 className="fw-bold">NextLevel Keys</h2> 
 
 					</Link>
 				
