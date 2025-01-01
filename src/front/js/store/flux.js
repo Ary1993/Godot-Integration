@@ -10,8 +10,84 @@ const getState = ({ getStore, getActions, setStore }) => {
       products: [],
       wishes: [],
       details: [],
+      // Godot game status
+      gameStatus: {
+        mode: "hidden", // Modes: "hidden", "progress", "error"
+        progress: { current: 0, total: 100 },
+        error: null,
+      },
     },
     actions: {
+      setGameStatus: (status) => {
+        const store = getStore();
+        setStore({ gameStatus: { ...store.gameStatus, ...status } });
+      },
+
+      initializeGame: async () => {
+        const { setGameStatus } = getActions();
+
+        try {
+          console.log("Fetching game configuration...");
+          const configResponse = await fetch("/api/game-config");
+          if (!configResponse.ok) {
+            throw new Error(`Failed to fetch game configuration: ${configResponse.status}`);
+          }
+          const GODOT_CONFIG = await configResponse.json();
+          console.log("Game configuration fetched successfully.", GODOT_CONFIG);
+
+          console.log("Loading Godot engine script...");
+          await new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = "/api/godotweb/kkk.js"; // Use proxied path
+            script.onload = () => {
+              if (typeof Engine === "undefined") {
+                reject(new Error("Engine is not defined in the loaded script."));
+              } else {
+                console.log("Godot engine script loaded successfully.");
+                resolve();
+              }
+            };
+            script.onerror = () => {
+              reject(new Error("Failed to load Godot engine script."));
+            };
+            document.body.appendChild(script);
+          });
+
+          console.log("Validating engine...");
+          const validationResponse = await fetch("/api/validate-engine");
+          const validationResult = await validationResponse.json();
+          if (!validationResult.engineLoaded) {
+            throw new Error("Godot Engine validation failed.");
+          }
+          console.log("Engine validated successfully.");
+
+          setGameStatus({
+            mode: "progress",
+            progress: { current: 0, total: 100 },
+            error: null,
+          });
+
+          console.log("Starting Godot game...");
+          const engine = new Engine(GODOT_CONFIG);
+          await engine.startGame({
+            onProgress: (current, total) => {
+              console.log(`Game loading: ${current}/${total}`);
+              setGameStatus({ mode: "progress", progress: { current, total } });
+            },
+          });
+
+          console.log("Game loaded successfully.");
+          setGameStatus({
+            mode: "hidden",
+            progress: { current: 100, total: 100 },
+            error: null,
+          });
+        } catch (error) {
+          console.error("Game initialization error:", error);
+          setGameStatus({ mode: "error", error: error.message });
+        }
+      },
+
       login: async (data) => {
         console.log(data);
         setStore({ isLogin: true });
@@ -232,7 +308,7 @@ const getState = ({ getStore, getActions, setStore }) => {
         setStore({ wishes: result });
         localStorage.setItem("wishes", JSON.stringify(result));
       },
-      
+
       verifyLogin: () => {
         console.log("renderiza");
         // Verify Loggin : si el tokern existe en el local storage, quiere decir que esta logeado   

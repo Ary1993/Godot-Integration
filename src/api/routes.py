@@ -17,6 +17,87 @@ CORS(api)  # Allow CORS requests to this API
 stripe.api_key = os.getenv("stripe.api_test")
 mail = Mail()
 
+@api.route('/godotweb/<path:filename>', methods=['GET'])
+def serve_godotweb_file(filename):
+    """
+    Serves static files like .wasm, .pck, or other game files from the godotweb directory under `/api`.
+    """
+    godotweb_directory = os.path.join(os.getcwd(), 'src', 'api', 'godotweb')  # Path to the godotweb files
+    filepath = os.path.join(godotweb_directory, filename)  # Full path of the file
+
+    # Debug: Print file being served
+    print(f"Attempting to serve file: {filepath}")
+
+    # Check if the file exists
+    if not os.path.exists(filepath):
+        print(f"File not found: {filepath}")
+        return jsonify({"error": f"File {filename} not found"}), 404
+
+    # Determine MIME type based on file extension
+    mimetype = None
+    if filename.endswith('.js'):
+        mimetype = 'application/javascript'
+    elif filename.endswith('.wasm'):
+        mimetype = 'application/wasm'
+    elif filename.endswith('.pck'):
+        mimetype = 'application/octet-stream'
+
+    # Serve the file
+    try:
+        print(f"Serving file: {filepath} with MIME type: {mimetype}")
+        return send_from_directory(godotweb_directory, filename, mimetype=mimetype)
+    except Exception as e:
+        print(f"Error while serving file {filepath}: {e}")
+        return jsonify({"error": f"Error serving file: {str(e)}"}), 500
+
+@api.route('/game-config', methods=['GET'])
+def get_game_config():
+    """Returns a sample game configuration"""
+    game_config = {
+        "args": [],
+        "canvasResizePolicy": 2,
+        "executable": "/api/godotweb/kkk",  # Include /api prefix
+        "experimentalVK": False,
+        "fileSizes": {
+            "/api/godotweb/kkk.pck": 30784,  # Include /api prefix
+            "/api/godotweb/kkk.wasm": 43016933,  # Include /api prefix
+        },
+        "focusCanvas": True,
+        "gdextensionLibs": [],
+    }
+    return jsonify(game_config), 200
+
+@api.route('/load-script', methods=['GET'])
+def load_script():
+    """Simulates loading a script"""
+    return jsonify({"message": "Script loaded successfully"}), 200
+
+@api.route('/game-progress', methods=['GET'])
+def get_game_progress():
+    """Returns game progress"""
+    progress = {
+        "current": 50,
+        "total": 100,
+    }
+    return jsonify(progress), 200
+
+@api.route('/validate-engine', methods=['GET'])
+def validate_engine():
+    """Validates the game engine"""
+    engine_loaded = True
+    return jsonify({"engineLoaded": engine_loaded}), 200
+
+@api.route('/start-game', methods=['POST'])
+def start_game():
+    """Starts the game with provided input data"""
+    data = request.json
+    if not data:
+        return jsonify({"error": "Invalid data format"}), 400
+
+    # Logic to start the game (example: validate inputs and simulate game start)
+    print(f"Starting game with data: {data}")
+    return jsonify({"status": "Game started successfully!"}), 200
+
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
     response_body = {}
